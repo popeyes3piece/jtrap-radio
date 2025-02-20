@@ -138,11 +138,13 @@
             <img src="border1.png" alt="Top border 1">
             <img src="border1.png" alt="Top border 1">
             <img src="border1.png" alt="Top border 1">
+            <img src="border1.png" alt="Top border 1">
         </div>
     </div>
 
     <div class="border-strip bottom-border-1">
         <div class="scrolling">
+            <img src="border1.png" alt="Bottom border 1">
             <img src="border1.png" alt="Bottom border 1">
             <img src="border1.png" alt="Bottom border 1">
             <img src="border1.png" alt="Bottom border 1">
@@ -167,12 +169,32 @@
 
         <div class="window-body">
             <p>Yo you got batch?</p>
-            <audio class="player" controls> preload="none"
-                <source src="http://99.228.84.3:8337/stream.mp3" type="audio/mpeg">
+            <audio class="player" controls> preload="auto"
+                <source src="http://99.228.84.3:8337/stream" type="audio/mpeg">
                 Your browser does not support the audio element.
             </audio>
         </div>
     </div>
+
+
+<script>
+    function duplicateImages() {
+        document.querySelectorAll('.scrolling').forEach(container => {
+            let img = container.querySelector('img');
+            let containerWidth = container.offsetWidth;
+            let imgWidth = img.offsetWidth;
+            let numCopies = Math.ceil(containerWidth / imgWidth) + 2; // Ensures enough copies
+
+            for (let i = 0; i < numCopies; i++) {
+                let clone = img.cloneNode(true);
+                container.appendChild(clone);
+            }
+        });
+    }
+    window.onload = duplicateImages;
+    window.onresize = duplicateImages; // Recalculate on resize
+</script>
+
 
 </body>
 

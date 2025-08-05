@@ -1,0 +1,63 @@
+<!-- nowplaying.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Now Playing</title>
+  <link rel="stylesheet" href="98.css">
+  <style>
+    body {
+      background-color: #003366; /* OG Win98 teal */
+      color: black;
+      padding: 20px;
+    }
+    .window {
+      position: absolute;
+      top: 80px;
+      left: 80px;
+      width: 400px;
+    }
+    .content {
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="window" id="nowPlayingWindow">
+    <div class="title-bar">
+      <div class="title-bar-text">Now Playing</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize"></button>
+        <button aria-label="Maximize"></button>
+        <button aria-label="Close" onclick="document.getElementById('nowPlayingWindow').style.display='none'"></button>
+      </div>
+    </div>
+    <div class="window-body">
+      <div class="content" id="nowPlayingContent">
+        <p><strong>Loading current track...</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function fetchNowPlaying() {
+      try {
+        const response = await fetch('http://127.0.0.1/api/nowplaying/jtrap_radio');
+        const data = await response.json();
+        const track = data.now_playing.song;
+        const html = `
+          <p><strong>Title:</strong> ${track.title}</p>
+          <p><strong>Artist:</strong> ${track.artist}</p>
+        `;
+        document.getElementById('nowPlayingContent').innerHTML = html;
+      } catch (e) {
+        document.getElementById('nowPlayingContent').innerHTML = '<p>Unable to fetch now playing info.</p>';
+      }
+    }
+
+    fetchNowPlaying();
+    setInterval(fetchNowPlaying, 15000);
+  </script>
+</body>
+</html>
+

@@ -42,6 +42,26 @@ document.addEventListener("DOMContentLoaded", () => {
       win.style.left = `${e.pageX - offsetX}px`;
       win.style.top = `${e.pageY - offsetY}px`;
     });
+function updateNowPlaying() {
+  fetch('http://localhost:80/api/nowplaying/jtrap_radio') // Replace with your public AzuraCast URL if needed
+    .then(response => response.json())
+    .then(data => {
+      const np = data.now_playing.song;
+      const container = document.getElementById('now-playing-container');
+      container.innerHTML = `
+        <b>${np.title}</b><br>
+        <i>${np.artist}</i>
+      `;
+    })
+    .catch(err => {
+      console.error('Error fetching now playing:', err);
+      document.getElementById('now-playing-container').innerText = 'Could not load now playing info.';
+    });
+}
+
+// Call every 15 seconds
+setInterval(updateNowPlaying, 15000);
+window.addEventListener('DOMContentLoaded', updateNowPlaying);
 
     document.addEventListener("mouseup", () => {
       if (!isDragging) return;

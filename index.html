@@ -13,6 +13,18 @@
   </div>
 
   <div id="taskbar" class="taskbar"></div>
+    <div class="window" id="window-nowplaying" style="width: 300px; position: absolute; top: 250px; left: 100px;">
+  <div class="title-bar">
+    <div class="title-bar-text">Now Playing</div>
+    <div class="title-bar-controls">
+      <button aria-label="Minimize" onclick="minimizeWindow('window-nowplaying')"></button>
+      <button aria-label="Close" onclick="closeWindow('window-nowplaying')"></button>
+    </div>
+  </div>
+  <div class="window-body" id="now-playing-container" style="font-size: 12px;">
+    Loading now playing data…
+  </div>
+</div>
 
   <div id="playerWindow" class="window" data-title="Player">
     <div class="title-bar">

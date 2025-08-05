@@ -1,201 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta meta name="viewport" content= "width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>JTRAP RADIO</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
-    <link rel="stylesheet" href="https://unpkg.com/98.css">
-    
-    <style>
-        
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background: url('background.jpg');
-            background-repeat: repeat;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .window {
-            width: 300px;
-            padding: 10px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .player {
-            width: 100%;
-        }
-
-        .border-strip {
-            position: absolute;
-            width: 100%;
-            height: 25px;
-            overflow: hidden;
-            white-space: wrap;
-            display: flex;
-        }
-
-        .top-border-1 {
-            top: 0;
-        }
-
-        .top-border-2 {
-            top: 25px;
-        }
-
-        .bottom-border-1 {
-            bottom: 0px;
-        }
-
-        .bottom-border-2 {
-            bottom:  0px
-        }
-
-        .scrolling {
-            display: flex;
-            animation: scroll-left 10s linear infinite;
-            min-width: 100vw;
-        }
-
-        .scrolling.reverse {
-            animation: scroll-right 10s linear infinite;
-        }
-
-        .scrolling img {
-            height: 25px;
-            flex-shrink: 0;
-        }
-
-        @keyframes scroll-left {
-            from { transform: translateX(0); }
-            to { transform: translateX(-50%); }
-        }
-
-        @keyframes scroll-right {
-            from { transform: translateX(-50%); }
-            to { transform: translateX(0); }
-        }
-
-        .walking-gif {
-             position: absolute;
-            bottom: 100%;
-            left: 0;
-            height: 50px;
-            z-index: 15;
-        }
-    
-        .blinking-banner {
-            position: absolute;
-            top: 25px;
-            width: 100%;
-            background: red;
-            color: yellow;
-            font-weight: bold;
-            font-size: 20px;
-            padding: 10px 0;
-            text-align: center;
-            animation: blink 2s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .random-gif {
-            position: absolute;
-            height: 40px;
-            z-index: 5;
-        }       
-
-    </style>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NumberStation Radio</title>
+  <link rel="stylesheet" href="https://unpkg.com/98.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
-    
-    <img src="aliens.gif" class="random-gif" style="top: 20%; left: 20%; transform: scale(6)">
-    <img src="9.gif" class="random-gif" style="top: 65%; left: 65%; transform: scale(3)">
-    <img src="10.gif" class="random-gif" style="top: 65%; left: 60%; transform: scale(3)">
-    <img src="leek.gif" class="random-gif" style="top: 80%; left: 40%; transform: scale(5)">
-    <img src="smokeme.gif" class="random-gif" style="top: 20%; left: 70%;transform: scale(3)">
-    <img src="skeleton1.gif" class="random-gif" style="top: 60%; left: 30%; transform: scale(3)">
-    <img src="13.gif" class="random-gif" style="top: 32%; left: 10%; transform: scale(6)">
-    <img src="pepedance.gif" class="random-gif" style="top: 55%; left: 15%; transform: scale(5)">
-    <img src="kamala.gif" class="random-gif" style="top: 75%; left: 80%; transform: scale(6)">
-    <img src="Newports.gif" class="random-gif" style="top: 75%; left: 20%; transform: scale(6)">
+  <div id="top-banner" class="title-bar">
+    <div class="title-bar-text">NumberStation - Internet Radio</div>
+  </div>
 
-    <div class="border-strip top-border-1">
-        <div class="scrolling">
-            <img src="border1.png" alt="Top border 1">
-            <img src="border1.png" alt="Top border 1">
-            <img src="border1.png" alt="Top border 1">
-            <img src="border1.png" alt="Top border 1">
-            <img src="border1.png" alt="Top border 1">
-        </div>
+  <div id="taskbar" class="taskbar"></div>
+
+  <div id="playerWindow" class="window" data-title="Player">
+    <div class="title-bar">
+      <div class="title-bar-text">Now Playing</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('playerWindow')"></button>
+      </div>
     </div>
+    <div class="window-body">
+    <iframe src="http://127.0.0.1/public/jtrap_radio/embed?theme=dark" frameborder="0" allowtransparency="true" style="width: 100%; min-height: 150px; border: 0;"></iframe> </div>
+  </div>
 
-    <div class="border-strip bottom-border-1">
-        <div class="scrolling">
-            <img src="border1.png" alt="Bottom border 1">
-            <img src="border1.png" alt="Bottom border 1">
-            <img src="border1.png" alt="Bottom border 1">
-            <img src="border1.png" alt="Bottom border 1">
-            <img src="border1.png" alt="Bottom border 1">
-        </div>
+  <div id="historyWindow" class="window" data-title="History">
+    <div class="title-bar">
+      <div class="title-bar-text">History</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('historyWindow')"></button>
+      </div>
     </div>
-
-    <div class="blinking-banner">
-        <span id="live-time">Live from 11AM - 11PM EST</span>
+    <div class="window-body">
+      <iframe src="http://127.0.0.1/public/jtrap_radio/history?theme=light" frameborder="0" allowtransparency="true" style="width: 100%; min-height: 300px; border: 0;"></iframe>
     </div>
-    
-    <div class="window">
-        <div class="title-bar">
-            <div class="title-bar-text">JTRAP</div>
-            <div class="title-bar-controls">
-                <button aria-label="Minimize"></button>
-                <button aria-label="Maximize"></button>
-                <button aria-label="Close"></button>
-            </div>
-        </div>
-        <img src="walking.gif" alt="Walking Character" class="walking-gif">
+  </div>
 
-        <div class="window-body">
-            <p>Yo you got batch?</p>
-            <audio class="player" controls> preload="auto"
-                <source src="http://stream.jtrap.live:8337/stream.mp3" type="audio/mpeg">
-                Your browser does not support the audio element.
-            </audio>
-        </div>
+  <div id="requestWindow" class="window" data-title="Requests">
+    <div class="title-bar">
+      <div class="title-bar-text">Requests</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('requestWindow')"></button>
+      </div>
     </div>
+    <div class="window-body">
+      <p>Request a track (feature coming soon!).</p>
+    </div>
+  </div>
 
-
-<script>
-    function duplicateImages() {
-        document.querySelectorAll('.scrolling').forEach(container => {
-            let img = container.querySelector('img');
-            let containerWidth = container.offsetWidth;
-            let imgWidth = img.offsetWidth;
-            let numCopies = Math.ceil(containerWidth / imgWidth) + 2; // Ensures enough copies
-
-            for (let i = 0; i < numCopies; i++) {
-                let clone = img.cloneNode(true);
-                container.appendChild(clone);
-            }
-        });
-    }
-    window.onload = duplicateImages;
-    window.onresize = duplicateImages; // Recalculate on resize
-</script>
-
-
+  <script src="script.js"></script>
 </body>
-
 </html>
+

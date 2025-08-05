@@ -1,62 +1,130 @@
-<!-- nowplaying.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
   <title>Now Playing</title>
-  <link rel="stylesheet" href="98.css">
+  <link rel="stylesheet" href="https://unpkg.com/98.css">
   <style>
     body {
-      background-color: #003366; /* OG Win98 teal */
-      color: black;
-      padding: 20px;
+      background-color: #003366;
+      font-family: sans-serif;
     }
     .window {
+      width: 300px;
       position: absolute;
-      top: 80px;
-      left: 80px;
-      width: 400px;
+      top: 100px;
+      left: 100px;
+      z-index: 10;
     }
-    .content {
-      padding: 10px;
+    .window-body {
+      padding: 0.5rem;
+    }
+    .now-playing {
+      font-size: 14px;
+      line-height: 1.4;
+    }
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #ccc;
+      margin-top: 5px;
+    }
+    .progress-fill {
+      height: 100%;
+      background: teal;
+      width: 0%;
+      transition: width 1s linear;
+    }
+    audio {
+      width: 100%;
+      margin-top: 10px;
+    }
+    .album-art {
+      width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border: 1px solid #000;
+    }
+    .error {
+      color: red;
+      font-size: 12px;
+      margin-top: 5px;
     }
   </style>
 </head>
 <body>
-  <div class="window" id="nowPlayingWindow">
+  <div class="window" id="nowplaying-window">
     <div class="title-bar">
       <div class="title-bar-text">Now Playing</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize"></button>
         <button aria-label="Maximize"></button>
-        <button aria-label="Close" onclick="document.getElementById('nowPlayingWindow').style.display='none'"></button>
+        <button aria-label="Close"></button>
       </div>
     </div>
     <div class="window-body">
-      <div class="content" id="nowPlayingContent">
-        <p><strong>Loading current track...</strong></p>
+      <div class="now-playing">
+        <strong>Title:</strong> <span id="song-title">Loading...</span><br>
+        <strong>Artist:</strong> <span id="song-artist">Loading...</span>
       </div>
+      <img id="album-art" class="album-art" src="" alt="Album Art" style="display: none;">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <audio id="audio-player" controls autoplay></audio>
+      <div id="error-message" class="error" style="display: none;">Stream is offline or unreachable.</div>
     </div>
   </div>
 
   <script>
-    async function fetchNowPlaying() {
+    const apiURL = 'http://127.0.0.1/api/nowplaying/jtrap_radio';
+
+    async function updateNowPlaying() {
       try {
-        const response = await fetch('http://127.0.0.1/api/nowplaying/jtrap_radio');
+        const response = await fetch(apiURL);
+        if (!response.ok) throw new Error('API response not OK');
+
         const data = await response.json();
-        const track = data.now_playing.song;
-        const html = `
-          <p><strong>Title:</strong> ${track.title}</p>
-          <p><strong>Artist:</strong> ${track.artist}</p>
-        `;
-        document.getElementById('nowPlayingContent').innerHTML = html;
+
+        const title = data.now_playing.song.title;
+        const artist = data.now_playing.song.artist;
+        const elapsed = data.now_playing.elapsed;
+        const duration = data.now_playing.duration;
+        const listenUrl = data.station.listen_url;
+        const artUrl = data.now_playing.song.art;
+
+        document.getElementById('song-title').textContent = title || 'Unknown';
+        document.getElementById('song-artist').textContent = artist || 'Unknown';
+
+        const progressPercent = duration > 0 ? (elapsed / duration) * 100 : 0;
+        document.getElementById('progress-fill').style.width = `${progressPercent}%`;
+
+        const player = document.getElementById('audio-player');
+        if (player.src !== listenUrl) {
+          player.src = listenUrl;
+        }
+
+        const albumArt = document.getElementById('album-art');
+        if (artUrl) {
+          albumArt.src = artUrl;
+          albumArt.style.display = 'block';
+        } else {
+          albumArt.style.display = 'none';
+        }
+
+        document.getElementById('error-message').style.display = 'none';
       } catch (e) {
-        document.getElementById('nowPlayingContent').innerHTML = '<p>Unable to fetch now playing info.</p>';
+        console.error('Error fetching now playing:', e);
+        document.getElementById('song-title').textContent = 'Unavailable';
+        document.getElementById('song-artist').textContent = 'Unavailable';
+        document.getElementById('progress-fill').style.width = '0%';
+        document.getElementById('album-art').style.display = 'none';
+        document.getElementById('error-message').style.display = 'block';
       }
     }
 
-    fetchNowPlaying();
-    setInterval(fetchNowPlaying, 15000);
+    updateNowPlaying();
+    setInterval(updateNowPlaying, 10000);
   </script>
 </body>
 </html>

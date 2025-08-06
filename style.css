@@ -45,11 +45,28 @@ body {
   left: 60px;
   z-index: 900;
   box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
+  resize: both;
+  overflow: hidden;
+  min-width: 200px;
+  min-height: 100px;
+  box-sizing: border-box;
+  }
+
+/* Ensure iframe fills the resizable body */
+.window .window-body {
+  height: calc(100% - 28px); /* Assuming 28px title bar */
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.window-body {
+.window-body iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
   padding: 10px;
 }
+
 
 iframe {
   border: none;
@@ -59,3 +76,55 @@ iframe {
   display: none;
 }
 
+.minimizewindow {
+  display: none;
+}
+#now-playing-window {
+  font-family: 'Courier New', monospace;
+  background: #111;
+  color: #0f0;
+  border: 2px solid #0f0;
+  box-shadow: 0 0 8px #0f0;
+}
+
+#now-playing-window .title-bar {
+  background: #004400;
+  color: #afa;
+  border-bottom: 2px solid #0f0;
+}
+
+#now-playing-window .title-bar-text {
+  font-weight: bold;
+}
+
+#now-playing-window .window-body {
+  background: #002200;
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+#progress-container {
+  width: 100%;
+  background: #333;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+#progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border: 1px solid #0f0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+#progress-fill {
+  height: 100%;
+  background: #00ffcc;
+  width: 0%;
+  transition: width 0.3s ease;
+}

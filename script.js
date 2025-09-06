@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeCustomHistory();
   initializeCustomRequests();
   initializeMediaPlayer();
+  initializeTerminal();
   initializeClock();
   initializeWalkingCat();
   initializeWindowResizing();
@@ -31,10 +32,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const title = win.querySelector(".title-bar");
     const id = win.id;
 
-    // Handle media player window specially (no taskbar button, but add dragging)
-    if (id === 'media-player-window') {
-      // Add dragging functionality to media player window
+    // Handle media player window and terminal window specially (no auto taskbar button, but add dragging)
+    if (id === 'media-player-window' || id === 'terminalWindow') {
+      // Add dragging functionality to these windows
       makeWindowDraggable(win, title);
+      // Add click handler to bring to front
+      title.addEventListener("click", () => bringToFront(win));
       return;
     }
 
@@ -79,6 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.textContent = title.querySelector(".title-bar-text").textContent;
     btn.addEventListener("click", () => {
       win.classList.toggle("hidden");
+      if (!win.classList.contains("hidden")) {
+        bringToFront(win);
+      }
     });
     
     // Create taskbar left section if it doesn't exist
@@ -91,6 +97,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     taskbarLeft.appendChild(btn);
 
+    // Add click handler to bring to front
+    title.addEventListener("click", () => bringToFront(win));
+
     // Drag functionality (mouse and touch)
     let isDragging = false;
     let offsetX, offsetY;
@@ -102,7 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
       isDragging = true;
       offsetX = e.offsetX;
       offsetY = e.offsetY;
-      win.style.zIndex = 999;
+      bringToFront(win);
     });
 
     // Touch events
@@ -114,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const rect = title.getBoundingClientRect();
         offsetX = currentTouch.clientX - rect.left;
         offsetY = currentTouch.clientY - rect.top;
-        win.style.zIndex = 999;
+        bringToFront(win);
       }
     });
 
@@ -179,6 +188,21 @@ function minimizeWindow(windowId) {
   } else {
     console.warn(`Window with ID "${windowId}" not found.`);
   }
+}
+
+// Bring window to front (highest z-index)
+function bringToFront(window) {
+  const allWindows = document.querySelectorAll('.window');
+  let maxZ = 1000; // Base z-index
+  
+  // Find the highest current z-index
+  allWindows.forEach(win => {
+    const z = parseInt(win.style.zIndex) || 1000;
+    if (z > maxZ) maxZ = z;
+  });
+  
+  // Set this window to be on top
+  window.style.zIndex = maxZ + 1;
 }
 
 function formatTime(seconds) {
@@ -720,7 +744,7 @@ function initializeWindowResizing() {
       startY = e.clientY;
       startWidth = parseInt(window.getComputedStyle(win).width, 10);
       startHeight = parseInt(window.getComputedStyle(win).height, 10);
-      win.style.zIndex = 999;
+      bringToFront(win);
     });
     
     document.addEventListener('mousemove', (e) => {
@@ -758,7 +782,7 @@ function initializeWindowResizing() {
       startY = currentTouch.clientY;
       startWidth = parseInt(window.getComputedStyle(win).width, 10);
       startHeight = parseInt(window.getComputedStyle(win).height, 10);
-      win.style.zIndex = 999;
+      bringToFront(win);
     });
     
     document.addEventListener('touchmove', (e) => {
@@ -1067,6 +1091,7 @@ function toggleWindow(windowId) {
   if (window) {
     if (window.style.display === 'none' || window.style.display === '') {
       window.style.display = 'block';
+      bringToFront(window);
     } else {
       window.style.display = 'none';
     }
@@ -1086,7 +1111,7 @@ function makeWindowDraggable(win, title) {
     isDragging = true;
     offsetX = e.clientX - win.offsetLeft;
     offsetY = e.clientY - win.offsetTop;
-    win.style.zIndex = 999;
+    bringToFront(win);
   });
 
   document.addEventListener('mousemove', (e) => {
@@ -1116,7 +1141,7 @@ function makeWindowDraggable(win, title) {
     const rect = title.getBoundingClientRect();
     offsetX = currentTouch.clientX - rect.left;
     offsetY = currentTouch.clientY - rect.top;
-    win.style.zIndex = 999;
+    bringToFront(win);
   });
 
   document.addEventListener('touchmove', (e) => {
@@ -1563,5 +1588,148 @@ async function testConnection() {
   }
   
   console.log("\n🔍 Connection test complete. Look for SUCCESS messages above.");
+}
+
+// Terminal initialization
+let terminal = null;
+
+function initializeTerminal() {
+  try {
+    // Initialize xterm.js terminal
+    terminal = new Terminal({
+      theme: {
+        background: '#000000',
+        foreground: '#00ff00',
+        cursor: '#00ff00',
+        selection: '#ffffff',
+        black: '#000000',
+        red: '#ff0000',
+        green: '#00ff00',
+        yellow: '#ffff00',
+        blue: '#0000ff',
+        magenta: '#ff00ff',
+        cyan: '#00ffff',
+        white: '#ffffff',
+        brightBlack: '#808080',
+        brightRed: '#ff8080',
+        brightGreen: '#80ff80',
+        brightYellow: '#ffff80',
+        brightBlue: '#8080ff',
+        brightMagenta: '#ff80ff',
+        brightCyan: '#80ffff',
+        brightWhite: '#ffffff'
+      },
+      fontSize: 12,
+      fontFamily: 'Courier New, monospace',
+      cursorBlink: true,
+      cursorStyle: 'block',
+      scrollback: 1000,
+      tabStopWidth: 4
+    });
+
+    // Add fit addon for responsive terminal
+    const fitAddon = new FitAddon.FitAddon();
+    terminal.loadAddon(fitAddon);
+
+    // Open terminal in the DOM
+    const terminalElement = document.getElementById('terminal');
+    if (terminalElement) {
+      terminal.open(terminalElement);
+      fitAddon.fit();
+      
+      // Add welcome message
+      terminal.writeln('\x1b[32mWelcome to JTrap Family Radio Terminal!\x1b[0m');
+      terminal.writeln('\x1b[33mType "help" for available commands.\x1b[0m');
+      terminal.writeln('');
+      
+      // Add some retro commands
+      terminal.writeln('\x1b[36mAvailable commands:\x1b[0m');
+      terminal.writeln('  help     - Show this help message');
+      terminal.writeln('  radio    - Show radio station info');
+      terminal.writeln('  time     - Show current time');
+      terminal.writeln('  clear    - Clear the terminal');
+      terminal.writeln('  matrix   - Matrix effect (coming soon)');
+      terminal.writeln('  bbs      - BBS connection (coming soon)');
+      terminal.writeln('');
+      
+      // Set up command handling
+      let currentLine = '';
+      terminal.onData(data => {
+        if (data === '\r') { // Enter key
+          terminal.writeln('');
+          handleCommand(currentLine.trim());
+          currentLine = '';
+          terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+        } else if (data === '\x7f') { // Backspace
+          if (currentLine.length > 0) {
+            currentLine = currentLine.slice(0, -1);
+            terminal.write('\b \b');
+          }
+        } else if (data >= ' ') { // Printable characters
+          currentLine += data;
+          terminal.write(data);
+        }
+      });
+      
+      // Show prompt
+      terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+      
+      // Handle window resize
+      window.addEventListener('resize', () => {
+        if (terminal && fitAddon) {
+          fitAddon.fit();
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Failed to initialize terminal:', error);
+  }
+}
+
+function handleCommand(command) {
+  switch (command.toLowerCase()) {
+    case 'help':
+      terminal.writeln('\x1b[36mAvailable commands:\x1b[0m');
+      terminal.writeln('  help     - Show this help message');
+      terminal.writeln('  radio    - Show radio station info');
+      terminal.writeln('  time     - Show current time');
+      terminal.writeln('  clear    - Clear the terminal');
+      terminal.writeln('  matrix   - Matrix effect (coming soon)');
+      terminal.writeln('  bbs      - BBS connection (coming soon)');
+      break;
+      
+    case 'radio':
+      terminal.writeln('\x1b[33m🎵 JTrap Family Radio Station\x1b[0m');
+      terminal.writeln('  Frequency: 99.9 FM');
+      terminal.writeln('  Website: jtrap.radio');
+      terminal.writeln('  Status: Online');
+      terminal.writeln('  Listeners: ' + Math.floor(Math.random() * 50) + 1);
+      break;
+      
+    case 'time':
+      const now = new Date();
+      terminal.writeln(`\x1b[35mCurrent time: ${now.toLocaleString()}\x1b[0m`);
+      break;
+      
+    case 'clear':
+      terminal.clear();
+      break;
+      
+    case 'matrix':
+      terminal.writeln('\x1b[32mMatrix effect coming soon...\x1b[0m');
+      break;
+      
+    case 'bbs':
+      terminal.writeln('\x1b[32mBBS connection coming soon...\x1b[0m');
+      break;
+      
+    case '':
+      // Empty command, do nothing
+      break;
+      
+    default:
+      terminal.writeln(`\x1b[31mCommand not found: ${command}\x1b[0m`);
+      terminal.writeln('Type "help" for available commands.');
+  }
 }
 

@@ -6,6 +6,7 @@
   <title>JTrap Family Radio</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="stylesheet" href="https://unpkg.com/98.css" />
+  <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -15,6 +16,7 @@
 
   <div id="taskbar" class="taskbar">
     <button class="taskbar-btn" onclick="toggleWindow('media-player-window')">🎬 Videos</button>
+    <button class="taskbar-btn" onclick="toggleWindow('terminalWindow')">💻 Terminal</button>
     <div class="taskbar-clock" id="taskbar-clock">12:00 AM</div>
   </div>
   
@@ -158,7 +160,7 @@
     <div class="title-bar">
       <div class="title-bar-text">🎬 Videos</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('media-player-window')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
@@ -180,6 +182,22 @@
     </div>
   </div>
 
+  <!-- Terminal Window -->
+  <div class="window" id="terminalWindow" data-title="Terminal" style="display: none; position: absolute; top: 100px; left: 300px; width: 600px; height: 400px; z-index: 1000;">
+    <div class="title-bar" onclick="bringToFront(document.getElementById('terminalWindow'))">
+      <div class="title-bar-text">💻 Terminal</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize" onclick="minimizeWindow('terminalWindow')"></button>
+      </div>
+    </div>
+    <div class="resize-handle resize-se"></div>
+    <div class="window-body terminal-body">
+      <div id="terminal"></div>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

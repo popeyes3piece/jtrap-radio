@@ -247,8 +247,29 @@ let isPlaying = false;
 let currentVolume = 100;
 let currentSongStartTime = 0;
 let currentSongDuration = 0;
+let wakeLock = null;
 let timeUpdateInterval = null;
 let lastSongTitle = "";
+
+// Wake Lock functionality for mobile devices
+async function requestWakeLock() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      console.log('Wake lock acquired - audio will continue playing when screen locks');
+    }
+  } catch (err) {
+    console.log('Wake lock failed:', err);
+  }
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) {
+    await wakeLock.release();
+    wakeLock = null;
+    console.log('Wake lock released');
+  }
+}
 
 // Initialize custom player
 function initializeCustomPlayer() {
@@ -295,6 +316,9 @@ function initializeCustomPlayer() {
       playPauseBtn.textContent = '⏸';
     }
     
+    // Request wake lock to keep audio playing when screen locks
+    requestWakeLock();
+    
     // Start real-time timer
     if (timeUpdateInterval) {
       clearInterval(timeUpdateInterval);
@@ -308,6 +332,9 @@ function initializeCustomPlayer() {
     if (playPauseBtn) {
       playPauseBtn.textContent = '▶';
     }
+    
+    // Release wake lock when audio pauses
+    releaseWakeLock();
     
     // Stop real-time timer
     if (timeUpdateInterval) {

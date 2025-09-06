@@ -1220,7 +1220,7 @@ function isLocalDevelopment() {
 // Get the correct API URL based on environment
 function getApiUrl(endpoint) {
   // Use live AzuraCast server for production
-  const baseUrl = "https://radio.jtrap.com";
+  const baseUrl = "https://radio.jtrap.live";
   const fullUrl = `${baseUrl}${endpoint}`;
   
   return fullUrl;

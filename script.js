@@ -1649,7 +1649,7 @@ function initializeTerminal() {
       terminal.writeln('  time     - Show current time');
       terminal.writeln('  clear    - Clear the terminal');
       terminal.writeln('  matrix   - Matrix effect (coming soon)');
-      terminal.writeln('  bbs      - BBS connection (coming soon)');
+      terminal.writeln('  bbs      - Access BBS system');
       terminal.writeln('');
       
       // Set up command handling
@@ -1657,9 +1657,15 @@ function initializeTerminal() {
       terminal.onData(data => {
         if (data === '\r') { // Enter key
           terminal.writeln('');
-          handleCommand(currentLine.trim());
+          if (window.BBS && window.BBS.bbsMode()) {
+            window.BBS.handleBBSCommand(currentLine.trim());
+          } else {
+            handleCommand(currentLine.trim());
+          }
           currentLine = '';
-          terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+          if (!window.BBS || !window.BBS.bbsMode()) {
+            terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+          }
         } else if (data === '\x7f') { // Backspace
           if (currentLine.length > 0) {
             currentLine = currentLine.slice(0, -1);
@@ -1695,7 +1701,7 @@ function handleCommand(command) {
       terminal.writeln('  time     - Show current time');
       terminal.writeln('  clear    - Clear the terminal');
       terminal.writeln('  matrix   - Matrix effect (coming soon)');
-      terminal.writeln('  bbs      - BBS connection (coming soon)');
+      terminal.writeln('  bbs      - Access BBS system');
       break;
       
     case 'radio':
@@ -1720,7 +1726,11 @@ function handleCommand(command) {
       break;
       
     case 'bbs':
-      terminal.writeln('\x1b[32mBBS connection coming soon...\x1b[0m');
+      if (window.BBS) {
+        window.BBS.showBBSLogin();
+      } else {
+        terminal.writeln('\x1b[31mBBS system not loaded. Please refresh the page.\x1b[0m');
+      }
       break;
       
     case '':

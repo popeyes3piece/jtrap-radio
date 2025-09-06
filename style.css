@@ -443,8 +443,8 @@ iframe {
 }
 
 .track-album {
-  color: #666;
-  font-size: 14px !important;
+  color: #f8f8f2;
+  font-size: 12px !important;
 }
 
 .progress-container {
@@ -811,8 +811,8 @@ iframe {
 }
 
 .history-item:hover {
-  background: #e8f4fd;
-  border-color: #000080;
+  background: #4a4a4a;
+  border-color: #75715e;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
@@ -822,7 +822,7 @@ iframe {
 }
 
 .history-time {
-  color: #666;
+  color: #b8b8b8;
   font-family: 'Courier New', monospace;
   margin-right: 8px;
   min-width: 40px;
@@ -877,7 +877,7 @@ iframe {
 }
 
 .history-track-artist {
-  color: #666;
+  color: #b8b8b8;
   font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
@@ -993,8 +993,8 @@ iframe {
 }
 
 .song-item:hover {
-  background: #e8f4fd;
-  border-color: #000080;
+  background: #4a4a4a;
+  border-color: #75715e;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   transform: translateY(-1px);
 }
@@ -1052,7 +1052,7 @@ iframe {
 }
 
 .song-artist {
-  color: #666;
+  color: #b8b8b8;
   font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
@@ -1160,7 +1160,7 @@ iframe {
 }
 
 .leaderboard-count {
-  color: #666;
+  color: #b8b8b8;
   font-size: 9px;
   white-space: nowrap;
   overflow: hidden;

@@ -658,10 +658,15 @@ let recentRequests = [];
 
 function initializeCustomRequests() {
   const refreshSongsBtn = document.getElementById('refresh-songs');
+  const shuffleSongsBtn = document.getElementById('shuffle-songs');
   const refreshLeaderboardBtn = document.getElementById('refresh-leaderboard');
   
   if (refreshSongsBtn) {
     refreshSongsBtn.addEventListener('click', loadAvailableSongs);
+  }
+  
+  if (shuffleSongsBtn) {
+    shuffleSongsBtn.addEventListener('click', shuffleCurrentSongs);
   }
   
   if (refreshLeaderboardBtn) {
@@ -671,6 +676,62 @@ function initializeCustomRequests() {
   // Load initial data
   loadAvailableSongs();
   updateLeaderboard();
+}
+
+// Shuffle the current songs list
+function shuffleCurrentSongs() {
+  if (!availableSongs || availableSongs.length === 0) {
+    loadAvailableSongs(); // Reload if no songs
+    return;
+  }
+  
+  const songsList = document.getElementById('songs-list');
+  if (!songsList) return;
+  
+  // Shuffle the songs array for random display
+  const shuffledSongs = [...availableSongs].sort(() => Math.random() - 0.5);
+  
+  // Limit to first 20 songs for better performance
+  const maxSongs = 20;
+  const songsToShow = shuffledSongs.slice(0, maxSongs);
+  const hasMore = availableSongs.length > maxSongs;
+  
+  // Create song list
+  songsList.innerHTML = songsToShow.map(song => {
+    // Access nested song data - the API returns { request_id, request_url, song: { title, artist, ... } }
+    const songData = song.song || song;
+    const title = songData.title || songData.name || songData.song_title || songData.track_title || 'Unknown Title';
+    const artist = songData.artist || songData.artist_name || songData.artist_title || songData.performer || 'Unknown Artist';
+    const requestId = song.request_id || song.id || song.song_id || song.track_id;
+    const songId = songData.id || songData.song_id || songData.track_id;
+    
+    const artUrl = songData.art || null;
+    
+    return `
+      <div class="song-item">
+        <div class="song-album-art">
+          ${artUrl ? 
+            `<img src="${artUrl}" alt="Album Art" class="song-art-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+             <div class="song-no-art" style="display: none;">♪</div>` :
+            `<div class="song-no-art">♪</div>`
+          }
+        </div>
+        <div class="song-details">
+          <div class="song-title">${title}</div>
+          <div class="song-artist">${artist}</div>
+        </div>
+        <div class="song-actions">
+          <button class="request-btn" data-song-id="${requestId}" onclick="requestSong('${requestId}')">
+            Request
+          </button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  if (hasMore) {
+    songsList.innerHTML += `<div class="songs-more">... and ${availableSongs.length - maxSongs} more songs available</div>`;
+  }
 }
 
 async function loadAvailableSongs() {
@@ -719,9 +780,12 @@ async function loadAvailableSongs() {
       return;
     }
     
+    // Shuffle the songs array for random display
+    const shuffledSongs = [...availableSongs].sort(() => Math.random() - 0.5);
+    
     // Limit to first 20 songs for better performance
     const maxSongs = 20;
-    const songsToShow = availableSongs.slice(0, maxSongs);
+    const songsToShow = shuffledSongs.slice(0, maxSongs);
     const hasMore = availableSongs.length > maxSongs;
     
     // Create song list

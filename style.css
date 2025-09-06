@@ -112,9 +112,39 @@ body {
   touch-action: none;
   /* Prevent text selection during drag */
   user-select: none;
+  /* Remove default resize for custom handles */
+  resize: none;
   -webkit-user-select: none;
   -moz-user-select: none;
   -ms-user-select: none;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  z-index: 1000;
+}
+
+.resize-se {
+  bottom: 0;
+  right: 0;
+  width: 20px;
+  height: 20px;
+  cursor: se-resize;
+  background: linear-gradient(-45deg, transparent 0%, transparent 30%, #c0c0c0 30%, #c0c0c0 100%);
+}
+
+.resize-se:hover {
+  background: linear-gradient(-45deg, transparent 0%, transparent 30%, #a0a0a0 30%, #a0a0a0 100%);
+}
+
+/* Mobile-friendly resize handles */
+@media (max-width: 768px) {
+  .resize-se {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 /* Ensure iframe fills the resizable body */

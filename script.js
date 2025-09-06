@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeMediaPlayer();
   initializeClock();
   initializeWalkingCat();
+  initializeWindowResizing();
   testConnection();
   updateNowPlaying();
   updateHistory();
@@ -257,9 +258,31 @@ async function requestWakeLock() {
     if ('wakeLock' in navigator) {
       wakeLock = await navigator.wakeLock.request('screen');
       console.log('Wake lock acquired - audio will continue playing when screen locks');
+      
+      // Handle wake lock release (e.g., when user switches tabs)
+      wakeLock.addEventListener('release', () => {
+        console.log('Wake lock was released');
+      });
+    } else {
+      console.log('Wake lock not supported, trying alternative approach');
+      // Fallback: try to keep the page active
+      document.addEventListener('visibilitychange', handleVisibilityChange);
     }
   } catch (err) {
     console.log('Wake lock failed:', err);
+    // Fallback: try to keep the page active
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+  }
+}
+
+// Handle visibility change as fallback
+function handleVisibilityChange() {
+  if (document.hidden && isPlaying) {
+    console.log('Page hidden but audio should continue playing');
+    // Try to keep audio playing by resuming if paused
+    if (audioElement && audioElement.paused) {
+      audioElement.play().catch(e => console.log('Could not resume audio:', e));
+    }
   }
 }
 
@@ -676,6 +699,100 @@ function initializeCustomRequests() {
   // Load initial data
   loadAvailableSongs();
   updateLeaderboard();
+}
+
+// Mobile-friendly window resizing
+function initializeWindowResizing() {
+  const windows = document.querySelectorAll('.window');
+  
+  windows.forEach(win => {
+    const resizeHandle = win.querySelector('.resize-se');
+    if (!resizeHandle) return;
+    
+    let isResizing = false;
+    let startX = 0;
+    let startY = 0;
+    let startWidth = 0;
+    let startHeight = 0;
+    let currentTouch = null;
+    
+    // Mouse events
+    resizeHandle.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isResizing = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      startWidth = parseInt(window.getComputedStyle(win).width, 10);
+      startHeight = parseInt(window.getComputedStyle(win).height, 10);
+      win.style.zIndex = 999;
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      e.preventDefault();
+      
+      const newWidth = startWidth + (e.clientX - startX);
+      const newHeight = startHeight + (e.clientY - startY);
+      
+      // Apply minimum size constraints
+      const minWidth = 200;
+      const minHeight = 100;
+      
+      win.style.width = Math.max(newWidth, minWidth) + 'px';
+      win.style.height = Math.max(newHeight, minHeight) + 'px';
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        // Save size
+        localStorage.setItem(`win-${win.id}-size`, JSON.stringify({
+          width: win.style.width,
+          height: win.style.height
+        }));
+      }
+    });
+    
+    // Touch events for mobile
+    resizeHandle.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isResizing = true;
+      currentTouch = e.touches[0];
+      startX = currentTouch.clientX;
+      startY = currentTouch.clientY;
+      startWidth = parseInt(window.getComputedStyle(win).width, 10);
+      startHeight = parseInt(window.getComputedStyle(win).height, 10);
+      win.style.zIndex = 999;
+    });
+    
+    document.addEventListener('touchmove', (e) => {
+      if (!isResizing || !currentTouch) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const newWidth = startWidth + (touch.clientX - startX);
+      const newHeight = startHeight + (touch.clientY - startY);
+      
+      // Apply minimum size constraints
+      const minWidth = 200;
+      const minHeight = 100;
+      
+      win.style.width = Math.max(newWidth, minWidth) + 'px';
+      win.style.height = Math.max(newHeight, minHeight) + 'px';
+    });
+    
+    document.addEventListener('touchend', () => {
+      if (isResizing) {
+        isResizing = false;
+        currentTouch = null;
+        // Save size
+        localStorage.setItem(`win-${win.id}-size`, JSON.stringify({
+          width: win.style.width,
+          height: win.style.height
+        }));
+      }
+    });
+  });
 }
 
 // Shuffle the current songs list

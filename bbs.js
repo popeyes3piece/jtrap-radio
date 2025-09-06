@@ -476,3 +476,6 @@ window.BBS = {
   bbsMode: () => bbsMode,
   setBBSMode: (mode) => { bbsMode = mode; }
 };
+
+// Debug logging
+console.log('BBS system loaded:', window.BBS);

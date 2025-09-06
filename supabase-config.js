@@ -1,11 +1,11 @@
 // Supabase Configuration for JTrap Radio BBS
-// Replace these with your actual Supabase project details
+// Project: supajtrap
 
 const SUPABASE_CONFIG = {
-  // Your Supabase Project URL (get this from Settings > API in your Supabase dashboard)
+  // Your Supabase Project URL
   url: 'https://pysojjrbzykihouptfnp.supabase.co',
   
-  // Your Supabase Anon Key (the one you provided)
+  // Your Supabase Anon Key
   anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB5c29qanJienlraWhvdXB0Zm5wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTcxNDcyMDIsImV4cCI6MjA3MjcyMzIwMn0.ZflpIeGllRtzPPIIwzk0jYT2WWp094l0nys4aD4qx2w'
 };
 

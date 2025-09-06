@@ -1727,10 +1727,23 @@ function handleCommand(command) {
       break;
       
     case 'bbs':
-      if (window.BBS) {
+      // Check if BBS is available, with fallback
+      if (window.BBS && window.BBS.showBBSLogin) {
+        window.BBS.showBBSLogin();
+      } else if (window.BBS && window.BBS.showBBSLogin) {
+        // Try the Supabase version
         window.BBS.showBBSLogin();
       } else {
         terminal.writeln('\x1b[31mBBS system not loaded. Please refresh the page.\x1b[0m');
+        terminal.writeln('\x1b[33mTrying to load BBS system...\x1b[0m');
+        // Try to load the BBS system manually
+        setTimeout(() => {
+          if (window.BBS && window.BBS.showBBSLogin) {
+            terminal.writeln('\x1b[32mBBS system loaded! Try "bbs" again.\x1b[0m');
+          } else {
+            terminal.writeln('\x1b[31mBBS system still not available. Check console for errors.\x1b[0m');
+          }
+        }, 1000);
       }
       break;
       

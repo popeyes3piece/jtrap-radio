@@ -1,27 +1,13 @@
-// BBS System with Supabase Integration for JTrap Family Radio
-// Real-time bulletin board system with persistent data
+// Fallback BBS System for JTrap Family Radio
+// Simple BBS that works without Supabase
 
 // BBS System Variables
 let currentUser = null;
 let bbsMode = false;
 let currentMenu = 'main';
 let inputBuffer = '';
-let supabase = null;
 
-// Initialize Supabase connection
-function initSupabase() {
-  if (window.getSupabase) {
-    supabase = window.getSupabase();
-    if (supabase) {
-      console.log('BBS: Supabase connected successfully!');
-      return true;
-    }
-  }
-  console.error('BBS: Supabase not available');
-  return false;
-}
-
-// BBS Login Screen
+// Simple BBS Login Screen
 function showBBSLogin() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
@@ -36,18 +22,12 @@ function showBBSLogin() {
   terminal.writeln('\x1b[36mUsername: guest\x1b[0m');
   terminal.writeln('\x1b[36mPassword: (press Enter for guest access)\x1b[0m');
   terminal.writeln('');
-  terminal.writeln('\x1b[35mOr type "register" to create a new account\x1b[0m');
   terminal.writeln('\x1b[35mOr type "exit" to return to main terminal\x1b[0m');
   terminal.writeln('');
   terminal.write('\x1b[32mUsername: \x1b[0m');
   
   bbsMode = true;
   currentMenu = 'login';
-  
-  // Initialize Supabase
-  if (!initSupabase()) {
-    terminal.writeln('\x1b[31mWarning: Supabase not connected. Some features may not work.\x1b[0m');
-  }
 }
 
 // BBS Main Menu
@@ -61,7 +41,7 @@ function showBBSMainMenu() {
   terminal.writeln('');
   terminal.writeln(`\x1b[33mWelcome back, ${currentUser.username}!\x1b[0m`);
   terminal.writeln(`\x1b[36mUser Level: ${currentUser.user_level ? currentUser.user_level.toUpperCase() : 'USER'}\x1b[0m`);
-  terminal.writeln(`\x1b[36mLast Login: ${currentUser.last_login ? new Date(currentUser.last_login).toLocaleString() : 'First time!'}\x1b[0m`);
+  terminal.writeln(`\x1b[36mLast Login: ${currentUser.last_login ? currentUser.last_login.toLocaleString() : 'First time!'}\x1b[0m`);
   terminal.writeln('');
   terminal.writeln('\x1b[35m┌─ Main Menu ─────────────────────────────────────────────────┐\x1b[0m');
   terminal.writeln('\x1b[35m│                                                              │\x1b[0m');
@@ -87,9 +67,6 @@ function handleBBSCommand(command) {
     case 'login':
       handleLogin(command);
       break;
-    case 'register':
-      handleRegistration(command);
-      break;
     case 'main':
       handleMainMenu(command);
       break;
@@ -114,7 +91,7 @@ function handleBBSCommand(command) {
 }
 
 // Login Handler
-async function handleLogin(command) {
+function handleLogin(command) {
   if (command.toLowerCase() === 'exit') {
     bbsMode = false;
     terminal.clear();
@@ -132,85 +109,25 @@ async function handleLogin(command) {
     return;
   }
   
-  if (command.toLowerCase() === 'register') {
-    showRegistration();
-    return;
-  }
-  
   if (!currentUser) {
     // Username input
-    if (command.trim() === '') {
-      terminal.writeln('\x1b[31mUsername cannot be empty. Try again or type "exit" to return.\x1b[0m');
-      terminal.write('\x1b[32mUsername: \x1b[0m');
-      return;
-    }
-    
-    // Check if user exists in Supabase
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('*')
-          .eq('username', command.toLowerCase())
-          .single();
-        
-        if (error || !data) {
-          terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
-          return;
-        }
-        
-        currentUser = data;
-        terminal.writeln(`\x1b[32mFound user: ${data.username}\x1b[0m`);
-        terminal.write('\x1b[32mPassword: \x1b[0m');
-      } catch (err) {
-        terminal.writeln('\x1b[31mDatabase error. Using fallback login.\x1b[0m');
-        // Fallback to local users
-        const localUsers = [
-          { username: 'admin', password: 'admin', user_level: 'sysop' },
-          { username: 'guest', password: '', user_level: 'user' }
-        ];
-        const user = localUsers.find(u => u.username === command.toLowerCase());
-        if (user) {
-          currentUser = user;
-          terminal.writeln(`\x1b[32mFound user: ${user.username}\x1b[0m`);
-          terminal.write('\x1b[32mPassword: \x1b[0m');
-        } else {
-          terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
-        }
-      }
+    const localUsers = [
+      { username: 'admin', password: 'admin', user_level: 'sysop' },
+      { username: 'guest', password: '', user_level: 'user' },
+      { username: 'listener', password: 'music', user_level: 'user' }
+    ];
+    const user = localUsers.find(u => u.username === command.toLowerCase());
+    if (user) {
+      currentUser = user;
+      terminal.writeln(`\x1b[32mFound user: ${user.username}\x1b[0m`);
+      terminal.write('\x1b[32mPassword: \x1b[0m');
     } else {
-      // Fallback to local users
-      const localUsers = [
-        { username: 'admin', password: 'admin', user_level: 'sysop' },
-        { username: 'guest', password: '', user_level: 'user' }
-      ];
-      const user = localUsers.find(u => u.username === command.toLowerCase());
-      if (user) {
-        currentUser = user;
-        terminal.writeln(`\x1b[32mFound user: ${user.username}\x1b[0m`);
-        terminal.write('\x1b[32mPassword: \x1b[0m');
-      } else {
-        terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-        terminal.write('\x1b[32mUsername: \x1b[0m');
-      }
+      terminal.writeln('\x1b[31mUser not found. Try again or type "exit" to return.\x1b[0m');
+      terminal.write('\x1b[32mUsername: \x1b[0m');
     }
   } else {
     // Password input
     if (currentUser.password === '' || currentUser.password === command) {
-      // Update last login in Supabase
-      if (supabase && currentUser.id) {
-        try {
-          await supabase
-            .from('users')
-            .update({ last_login: new Date().toISOString() })
-            .eq('id', currentUser.id);
-        } catch (err) {
-          console.error('Failed to update last login:', err);
-        }
-      }
-      
       currentUser.last_login = new Date();
       terminal.writeln('\x1b[32mLogin successful!\x1b[0m');
       setTimeout(() => showBBSMainMenu(), 1000);
@@ -219,118 +136,6 @@ async function handleLogin(command) {
       terminal.write('\x1b[32mUsername: \x1b[0m');
       currentUser = null;
     }
-  }
-}
-
-// Registration Handler
-function showRegistration() {
-  terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                        User Registration                    ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
-  terminal.writeln('');
-  terminal.writeln('\x1b[33mCreate a new BBS account:\x1b[0m');
-  terminal.writeln('');
-  terminal.write('\x1b[32mUsername: \x1b[0m');
-  
-  currentMenu = 'register';
-}
-
-async function handleRegistration(command) {
-  if (command.toLowerCase() === 'exit') {
-    showBBSLogin();
-    return;
-  }
-  
-  if (!currentUser) {
-    // Username input
-    if (command.trim() === '') {
-      terminal.writeln('\x1b[31mUsername cannot be empty. Try again or type "exit" to return.\x1b[0m');
-      terminal.write('\x1b[32mUsername: \x1b[0m');
-      return;
-    }
-    
-    // Check if username is available
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('username')
-          .eq('username', command.toLowerCase())
-          .single();
-        
-        if (data) {
-          terminal.writeln('\x1b[31mUsername already taken. Try another.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
-          return;
-        }
-      } catch (err) {
-        // Username available
-      }
-    }
-    
-    currentUser = { username: command.toLowerCase(), step: 'password' };
-    terminal.writeln(`\x1b[32mUsername: ${command}\x1b[0m`);
-    terminal.write('\x1b[32mPassword: \x1b[0m');
-  } else if (currentUser.step === 'password') {
-    // Password input
-    if (command.trim() === '') {
-      terminal.writeln('\x1b[31mPassword cannot be empty. Try again.\x1b[0m');
-      terminal.write('\x1b[32mPassword: \x1b[0m');
-      return;
-    }
-    
-    currentUser.password = command;
-    currentUser.step = 'email';
-    terminal.writeln('\x1b[32mPassword: [HIDDEN]\x1b[0m');
-    terminal.write('\x1b[32mEmail: \x1b[0m');
-  } else if (currentUser.step === 'email') {
-    // Email input
-    if (command.trim() === '') {
-      terminal.writeln('\x1b[31mEmail cannot be empty. Try again.\x1b[0m');
-      terminal.write('\x1b[32mEmail: \x1b[0m');
-      return;
-    }
-    
-    currentUser.email = command;
-    
-    // Create user in Supabase
-    if (supabase) {
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .insert([{
-            username: currentUser.username,
-            email: currentUser.email,
-            password_hash: currentUser.password, // In production, hash this!
-            user_level: 'user',
-            join_date: new Date().toISOString(),
-            last_login: new Date().toISOString()
-          }])
-          .select()
-          .single();
-        
-        if (error) {
-          terminal.writeln('\x1b[31mRegistration failed: ' + error.message + '\x1b[0m');
-          terminal.writeln('\x1b[33mUsing local account instead.\x1b[0m');
-          currentUser.user_level = 'user';
-          currentUser.last_login = new Date();
-        } else {
-          currentUser = data;
-          terminal.writeln('\x1b[32mRegistration successful!\x1b[0m');
-        }
-      } catch (err) {
-        terminal.writeln('\x1b[31mRegistration failed. Using local account.\x1b[0m');
-        currentUser.user_level = 'user';
-        currentUser.last_login = new Date();
-      }
-    } else {
-      terminal.writeln('\x1b[33mSupabase not available. Using local account.\x1b[0m');
-      currentUser.user_level = 'user';
-      currentUser.last_login = new Date();
-    }
-    
-    setTimeout(() => showBBSMainMenu(), 1000);
   }
 }
 
@@ -368,7 +173,7 @@ function handleMainMenu(command) {
 }
 
 // Message Boards
-async function showMessageBoards() {
+function showMessageBoards() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
   terminal.writeln('\x1b[32m║                        Message Boards                       ║\x1b[0m');
@@ -377,29 +182,9 @@ async function showMessageBoards() {
   
   const boards = ['general', 'announcements', 'music', 'tech'];
   terminal.writeln('\x1b[35mAvailable Boards:\x1b[0m');
-  
-  if (supabase) {
-    try {
-      for (let i = 0; i < boards.length; i++) {
-        const board = boards[i];
-        const { count } = await supabase
-          .from('messages')
-          .select('*', { count: 'exact', head: true })
-          .eq('board', board);
-        terminal.writeln(`\x1b[36m  [${i + 1}] ${board.toUpperCase()} (${count || 0} messages)\x1b[0m`);
-      }
-    } catch (err) {
-      terminal.writeln('\x1b[31mError loading message counts.\x1b[0m');
-      boards.forEach((board, index) => {
-        terminal.writeln(`\x1b[36m  [${index + 1}] ${board.toUpperCase()} (0 messages)\x1b[0m`);
-      });
-    }
-  } else {
-    boards.forEach((board, index) => {
-      terminal.writeln(`\x1b[36m  [${index + 1}] ${board.toUpperCase()} (0 messages)\x1b[0m`);
-    });
-  }
-  
+  boards.forEach((board, index) => {
+    terminal.writeln(`\x1b[36m  [${index + 1}] ${board.toUpperCase()} (0 messages)\x1b[0m`);
+  });
   terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
   terminal.writeln('');
   terminal.write('\x1b[32mSelect board (0-4): \x1b[0m');
@@ -408,7 +193,7 @@ async function showMessageBoards() {
 }
 
 // File Downloads
-async function showFileDownloads() {
+function showFileDownloads() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
   terminal.writeln('\x1b[32m║                        File Downloads                       ║\x1b[0m');
@@ -416,42 +201,16 @@ async function showFileDownloads() {
   terminal.writeln('');
   
   terminal.writeln('\x1b[35mAvailable Files:\x1b[0m');
-  
-  if (supabase) {
-    try {
-      const { data: files, error } = await supabase
-        .from('files')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        terminal.writeln('\x1b[31mError loading files.\x1b[0m');
-      } else if (files && files.length > 0) {
-        files.forEach((file, index) => {
-          terminal.writeln(`\x1b[36m  [${index + 1}] ${file.name}\x1b[0m`);
-          terminal.writeln(`\x1b[33m      Size: ${file.size} | Downloads: ${file.downloads} | Uploader: ${file.uploader_id}\x1b[0m`);
-          terminal.writeln(`\x1b[33m      Description: ${file.description}\x1b[0m`);
-          terminal.writeln('');
-        });
-      } else {
-        terminal.writeln('\x1b[33m  No files available.\x1b[0m');
-      }
-    } catch (err) {
-      terminal.writeln('\x1b[31mError loading files.\x1b[0m');
-    }
-  } else {
-    terminal.writeln('\x1b[33m  Supabase not available. No files to display.\x1b[0m');
-  }
-  
+  terminal.writeln('\x1b[33m  No files available in offline mode.\x1b[0m');
   terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
   terminal.writeln('');
-  terminal.write('\x1b[32mSelect file to download (0-4): \x1b[0m');
+  terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
   
   currentMenu = 'files';
 }
 
 // User Directory
-async function showUserDirectory() {
+function showUserDirectory() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
   terminal.writeln('\x1b[32m║                        User Directory                       ║\x1b[0m');
@@ -459,33 +218,18 @@ async function showUserDirectory() {
   terminal.writeln('');
   
   terminal.writeln('\x1b[35mRegistered Users:\x1b[0m');
+  const users = [
+    { username: 'admin', user_level: 'sysop', join_date: '2024-01-01' },
+    { username: 'guest', user_level: 'user', join_date: '2024-01-01' },
+    { username: 'listener', user_level: 'user', join_date: '2024-01-15' }
+  ];
   
-  if (supabase) {
-    try {
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('username, user_level, join_date, last_login')
-        .order('join_date', { ascending: false });
-      
-      if (error) {
-        terminal.writeln('\x1b[31mError loading users.\x1b[0m');
-      } else if (users && users.length > 0) {
-        users.forEach(user => {
-          const status = user.username === currentUser.username ? ' (YOU)' : '';
-          terminal.writeln(`\x1b[36m  ${user.username}${status}\x1b[0m`);
-          terminal.writeln(`\x1b[33m      Level: ${user.user_level ? user.user_level.toUpperCase() : 'USER'} | Joined: ${user.join_date ? new Date(user.join_date).toLocaleDateString() : 'Unknown'}\x1b[0m`);
-          terminal.writeln(`\x1b[33m      Last Login: ${user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}\x1b[0m`);
-          terminal.writeln('');
-        });
-      } else {
-        terminal.writeln('\x1b[33m  No users found.\x1b[0m');
-      }
-    } catch (err) {
-      terminal.writeln('\x1b[31mError loading users.\x1b[0m');
-    }
-  } else {
-    terminal.writeln('\x1b[33m  Supabase not available. No user data to display.\x1b[0m');
-  }
+  users.forEach(user => {
+    const status = user.username === currentUser.username ? ' (YOU)' : '';
+    terminal.writeln(`\x1b[36m  ${user.username}${status}\x1b[0m`);
+    terminal.writeln(`\x1b[33m      Level: ${user.user_level.toUpperCase()} | Joined: ${user.join_date}\x1b[0m`);
+    terminal.writeln('');
+  });
   
   terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
   terminal.writeln('');
@@ -495,7 +239,7 @@ async function showUserDirectory() {
 }
 
 // Chat Room
-async function showChatRoom() {
+function showChatRoom() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
   terminal.writeln('\x1b[32m║                          Chat Room                          ║\x1b[0m');
@@ -503,35 +247,7 @@ async function showChatRoom() {
   terminal.writeln('');
   
   terminal.writeln('\x1b[35mRecent Messages:\x1b[0m');
-  
-  if (supabase) {
-    try {
-      const { data: messages, error } = await supabase
-        .from('chat_messages')
-        .select(`
-          *,
-          users!chat_messages_user_id_fkey(username)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(10);
-      
-      if (error) {
-        terminal.writeln('\x1b[31mError loading chat messages.\x1b[0m');
-      } else if (messages && messages.length > 0) {
-        messages.reverse().forEach(msg => {
-          const author = msg.users ? msg.users.username : 'Unknown';
-          terminal.writeln(`\x1b[36m  [${new Date(msg.created_at).toLocaleTimeString()}] ${author}: ${msg.content}\x1b[0m`);
-        });
-      } else {
-        terminal.writeln('\x1b[33m  No messages yet. Be the first to chat!\x1b[0m');
-      }
-    } catch (err) {
-      terminal.writeln('\x1b[31mError loading chat messages.\x1b[0m');
-    }
-  } else {
-    terminal.writeln('\x1b[33m  Supabase not available. No chat messages to display.\x1b[0m');
-  }
-  
+  terminal.writeln('\x1b[33m  No messages yet. Be the first to chat!\x1b[0m');
   terminal.writeln('');
   terminal.writeln('\x1b[35mCommands:\x1b[0m');
   terminal.writeln('\x1b[36m  Type your message and press Enter to send\x1b[0m');
@@ -571,7 +287,7 @@ function showRadioInfo() {
 }
 
 // System Information
-async function showSystemInfo() {
+function showSystemInfo() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
   terminal.writeln('\x1b[32m║                      System Information                     ║\x1b[0m');
@@ -579,37 +295,12 @@ async function showSystemInfo() {
   terminal.writeln('');
   
   terminal.writeln('\x1b[35mBBS System Info:\x1b[0m');
-  terminal.writeln('\x1b[36m  Software: JTrap BBS v2.0 (Supabase)\x1b[0m');
+  terminal.writeln('\x1b[36m  Software: JTrap BBS v2.0 (Offline Mode)\x1b[0m');
   terminal.writeln('\x1b[36m  Uptime: 24/7\x1b[0m');
-  terminal.writeln('\x1b[36m  Database: Supabase PostgreSQL\x1b[0m');
-  
-  if (supabase) {
-    try {
-      // Get user count
-      const { count: userCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get message count
-      const { count: messageCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get file count
-      const { count: fileCount } = await supabase
-        .from('files')
-        .select('*', { count: 'exact', head: true });
-      
-      terminal.writeln(`\x1b[36m  Total Users: ${userCount || 0}\x1b[0m`);
-      terminal.writeln(`\x1b[36m  Messages: ${messageCount || 0}\x1b[0m`);
-      terminal.writeln(`\x1b[36m  Files: ${fileCount || 0}\x1b[0m`);
-    } catch (err) {
-      terminal.writeln('\x1b[31m  Error loading statistics\x1b[0m');
-    }
-  } else {
-    terminal.writeln('\x1b[31m  Supabase not connected\x1b[0m');
-  }
-  
+  terminal.writeln('\x1b[36m  Database: Local Storage\x1b[0m');
+  terminal.writeln('\x1b[36m  Total Users: 3\x1b[0m');
+  terminal.writeln('\x1b[36m  Messages: 0\x1b[0m');
+  terminal.writeln('\x1b[36m  Files: 0\x1b[0m');
   terminal.writeln('');
   terminal.writeln('\x1b[35mServer Info:\x1b[0m');
   terminal.writeln('\x1b[36m  OS: Linux\x1b[0m');
@@ -676,45 +367,12 @@ function handleMessageMenu(command) {
   }
 }
 
-async function handleFileMenu(command) {
+function handleFileMenu(command) {
   if (command === '0') {
     showBBSMainMenu();
   } else {
-    const fileIndex = parseInt(command) - 1;
-    if (fileIndex >= 0) {
-      if (supabase) {
-        try {
-          const { data: files, error } = await supabase
-            .from('files')
-            .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (error || !files || fileIndex >= files.length) {
-            terminal.writeln('\x1b[31mInvalid file selection.\x1b[0m');
-          } else {
-            const file = files[fileIndex];
-            terminal.writeln(`\x1b[32mDownloading ${file.name}...\x1b[0m`);
-            terminal.writeln(`\x1b[33mFile size: ${file.size}\x1b[0m`);
-            terminal.writeln(`\x1b[33mDescription: ${file.description}\x1b[0m`);
-            terminal.writeln('\x1b[32mDownload complete! (Simulated)\x1b[0m');
-            
-            // Update download count
-            await supabase
-              .from('files')
-              .update({ downloads: file.downloads + 1 })
-              .eq('id', file.id);
-          }
-        } catch (err) {
-          terminal.writeln('\x1b[31mError downloading file.\x1b[0m');
-        }
-      } else {
-        terminal.writeln('\x1b[31mSupabase not available.\x1b[0m');
-      }
-    } else {
-      terminal.writeln('\x1b[31mInvalid file selection.\x1b[0m');
-    }
-    terminal.writeln('');
-    terminal.write('\x1b[32mSelect file to download (0-4): \x1b[0m');
+    terminal.writeln('\x1b[33mFile download feature coming soon!\x1b[0m');
+    terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
   }
 }
 
@@ -727,31 +385,11 @@ function handleUserMenu(command) {
   }
 }
 
-async function handleChatMenu(command) {
+function handleChatMenu(command) {
   if (command.toLowerCase() === 'exit') {
     showBBSMainMenu();
   } else if (command.trim() !== '') {
-    if (supabase) {
-      try {
-        const { error } = await supabase
-          .from('chat_messages')
-          .insert([{
-            user_id: currentUser.id,
-            content: command,
-            created_at: new Date().toISOString()
-          }]);
-        
-        if (error) {
-          terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
-        } else {
-          terminal.writeln(`\x1b[36m[${new Date().toLocaleTimeString()}] ${currentUser.username}: ${command}\x1b[0m`);
-        }
-      } catch (err) {
-        terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
-      }
-    } else {
-      terminal.writeln(`\x1b[36m[${new Date().toLocaleTimeString()}] ${currentUser.username}: ${command}\x1b[0m`);
-    }
+    terminal.writeln(`\x1b[36m[${new Date().toLocaleTimeString()}] ${currentUser.username}: ${command}\x1b[0m`);
     terminal.write('\x1b[32mEnter message: \x1b[0m');
   } else {
     terminal.write('\x1b[32mEnter message: \x1b[0m');
@@ -776,4 +414,4 @@ window.BBS = {
 };
 
 // Debug logging
-console.log('BBS Supabase system loaded:', window.BBS);
+console.log('BBS Fallback system loaded:', window.BBS);

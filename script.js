@@ -1598,28 +1598,29 @@ function initializeTerminal() {
     // Initialize xterm.js terminal
     terminal = new Terminal({
       theme: {
-        background: '#000000',
-        foreground: '#00ff00',
-        cursor: '#00ff00',
-        selection: '#ffffff',
-        black: '#000000',
-        red: '#ff0000',
-        green: '#00ff00',
-        yellow: '#ffff00',
-        blue: '#0000ff',
-        magenta: '#ff00ff',
-        cyan: '#00ffff',
-        white: '#ffffff',
-        brightBlack: '#808080',
-        brightRed: '#ff8080',
-        brightGreen: '#80ff80',
-        brightYellow: '#ffff80',
-        brightBlue: '#8080ff',
-        brightMagenta: '#ff80ff',
-        brightCyan: '#80ffff',
-        brightWhite: '#ffffff'
+        // Gruvbox Dark color scheme
+        background: '#282828',      // gruvbox-bg0
+        foreground: '#ebdbb2',      // gruvbox-fg
+        cursor: '#ebdbb2',          // gruvbox-fg
+        selection: '#3c3836',       // gruvbox-bg2
+        black: '#282828',           // gruvbox-bg0
+        red: '#cc241d',             // gruvbox-red
+        green: '#98971a',           // gruvbox-green
+        yellow: '#d79921',          // gruvbox-yellow
+        blue: '#458588',            // gruvbox-blue
+        magenta: '#b16286',         // gruvbox-purple
+        cyan: '#689d6a',            // gruvbox-aqua
+        white: '#a89984',           // gruvbox-gray
+        brightBlack: '#928374',     // gruvbox-bg4
+        brightRed: '#fb4934',       // gruvbox-bright-red
+        brightGreen: '#b8bb26',     // gruvbox-bright-green
+        brightYellow: '#fabd2f',    // gruvbox-bright-yellow
+        brightBlue: '#83a598',      // gruvbox-bright-blue
+        brightMagenta: '#d3869b',   // gruvbox-bright-purple
+        brightCyan: '#8ec07c',      // gruvbox-bright-aqua
+        brightWhite: '#ebdbb2'      // gruvbox-fg
       },
-      fontSize: 12,
+      fontSize: 13,                 // Increased from 12
       fontFamily: 'Courier New, monospace',
       cursorBlink: true,
       cursorStyle: 'block',

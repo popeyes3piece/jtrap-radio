@@ -1409,7 +1409,7 @@ iframe {
 /* Terminal Window Styles */
 .terminal-body {
   padding: 0;
-  background: #000;
+  background: #282828; /* Gruvbox background */
   height: calc(100% - 28px);
   overflow: hidden;
 }
@@ -1417,12 +1417,12 @@ iframe {
 #terminal {
   width: 100%;
   height: 100%;
-  background: #000;
-  color: #00ff00;
+  background: #282828; /* Gruvbox background */
+  color: #ebdbb2; /* Gruvbox foreground */
   font-family: 'Courier New', monospace;
-  font-size: 12px;
-  line-height: 1.2;
-  padding: 4px;
+  font-size: 13px; /* Increased font size */
+  line-height: 1.3; /* Slightly increased line height */
+  padding: 6px; /* Increased padding */
   box-sizing: border-box;
 }
 
@@ -1433,9 +1433,9 @@ iframe {
 }
 
 .terminal-body .xterm-viewport {
-  background: #000 !important;
+  background: #282828 !important; /* Gruvbox background */
 }
 
 .terminal-body .xterm-screen {
-  background: #000 !important;
+  background: #282828 !important; /* Gruvbox background */
 }

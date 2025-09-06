@@ -10,17 +10,21 @@
 .title-bar-text,
 .taskbar button {
   /* Use system emoji font for emoji characters only */
-  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', 'Segoe UI Symbol', 'Android Emoji', 'EmojiSymbols', 'Tahoma', 'Arial', sans-serif;
+  font-family: 'Tahoma', 'Arial', sans-serif;
+  font-feature-settings: "liga" 0, "kern" 1;
+  letter-spacing: 0;
+  word-spacing: 0;
 }
 
 body {
-  background: #c0c0c0 url('img/background.jpg') repeat;
-  background-size: auto;
+  background: #2d2d2d url('img/metallic-foam.jpg') no-repeat center center;
+  background-size: cover;
   height: 100vh;
   margin: 0;
   padding: 0;
   font-family: 'Tahoma', 'Arial', sans-serif;
   overflow: hidden;
+  color: #f8f8f2;
   /* Prevent zoom on double tap for mobile */
   touch-action: manipulation;
   /* Prevent text selection during drag */
@@ -44,8 +48,8 @@ body {
   left: 0;
   right: 0;
   height: 30px;
-  background-color: #c0c0c0;
-  border-top: 2px solid white;
+  background: #2d2d2d;
+  border-top: 2px solid #75715e;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -61,13 +65,13 @@ body {
 }
 
 .taskbar-clock {
-  background: #c0c0c0;
-  border: 1px outset #c0c0c0;
+  background: #3c3c3c;
+  border: 1px outset #75715e;
   padding: 1px 4px;
   font-family: 'Tahoma', sans-serif;
   font-size: 11px;
   font-weight: normal;
-  color: #000;
+  color: #f8f8f2;
   min-width: 60px;
   text-align: center;
   margin-left: auto;
@@ -81,9 +85,13 @@ body {
 .taskbar button {
   font-size: 12px;
   padding: 2px 6px;
-  background-color: #e0e0e0;
-  border: 2px outset #fff;
+  background: #2a2a2a;
+  border-top: 1px outset #4a4a4a;
+  border-left: 1px outset #4a4a4a;
+  border-bottom: 1px inset #1a1a1a;
+  border-right: 1px inset #1a1a1a;
   cursor: pointer;
+  color: #f8f8f2;
   /* Better touch targets for mobile */
   min-height: 24px;
   min-width: 60px;
@@ -96,7 +104,72 @@ body {
   line-height: 1.2;
 }
 
+.taskbar button:hover {
+  background: #3a3a3a;
+}
+
+.taskbar button:active {
+  border-top: 1px inset #1a1a1a;
+  border-left: 1px inset #1a1a1a;
+  border-bottom: 1px outset #4a4a4a;
+  border-right: 1px outset #4a4a4a;
+  background: #1a1a1a;
+}
+
+/* Taskbar button styling - override 98.css */
+#taskbar .taskbar-btn,
+.taskbar .taskbar-btn,
+button.taskbar-btn {
+  font-size: 12px !important;
+  padding: 2px 6px !important;
+  background: #2a2a2a !important;
+  border: none !important;
+  border-top: 1px solid #4a4a4a !important;
+  border-left: 1px solid #4a4a4a !important;
+  border-bottom: 1px solid #1a1a1a !important;
+  border-right: 1px solid #1a1a1a !important;
+  cursor: pointer !important;
+  color: #f8f8f2 !important;
+  /* Better touch targets for mobile */
+  min-height: 24px !important;
+  min-width: 60px !important;
+  /* Prevent text selection */
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  /* Better line height for text alignment */
+  line-height: 1.2 !important;
+  font-family: 'Tahoma', 'Arial', sans-serif !important;
+  font-feature-settings: "liga" 0, "kern" 1 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+#taskbar .taskbar-btn:hover,
+.taskbar .taskbar-btn:hover,
+button.taskbar-btn:hover {
+  background: #3a3a3a !important;
+}
+
+#taskbar .taskbar-btn:active,
+.taskbar .taskbar-btn:active,
+button.taskbar-btn:active {
+  border-top: 1px solid #1a1a1a !important;
+  border-left: 1px solid #1a1a1a !important;
+  border-bottom: 1px solid #4a4a4a !important;
+  border-right: 1px solid #4a4a4a !important;
+  background: #1a1a1a !important;
+}
+
 .window {
+  background: #3c3c3c;
+  border: 2px outset #75715e;
   width: 300px;
   position: absolute;
   top: 60px;
@@ -132,11 +205,13 @@ body {
   width: 20px;
   height: 20px;
   cursor: se-resize;
-  background: linear-gradient(-45deg, transparent 0%, transparent 30%, #c0c0c0 30%, #c0c0c0 100%);
+  background: transparent;
+  border: none;
+  padding: 1px;
 }
 
 .resize-se:hover {
-  background: linear-gradient(-45deg, transparent 0%, transparent 30%, #a0a0a0 30%, #a0a0a0 100%);
+  background: rgba(117, 113, 94, 0.1);
 }
 
 /* Mobile-friendly resize handles */
@@ -145,6 +220,23 @@ body {
     width: 30px;
     height: 30px;
   }
+}
+
+/* Title bar styling */
+.title-bar {
+  background: #4a4a4a !important;
+  color: #f8f8f2 !important;
+  border-bottom: 1px solid #75715e !important;
+}
+
+.title-bar-text {
+  color: #f8f8f2 !important;
+  font-weight: bold;
+  letter-spacing: 0;
+  word-spacing: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Ensure iframe fills the resizable body */
@@ -227,8 +319,8 @@ iframe {
 /* Custom Windows 98 Player Styles */
 .custom-player {
   padding: 10px;
-  background: #c0c0c0;
-  border: 2px inset #c0c0c0;
+  background: #3c3c3c;
+  border: 2px inset #75715e;
   font-family: 'Tahoma', sans-serif;
   font-size: 12px;
   height: 100%;
@@ -278,10 +370,11 @@ iframe {
 
 .track-info {
   text-align: center;
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   padding: 4px;
   flex-shrink: 0;
+  color: #f8f8f2;
 }
 
 .track-title-container {
@@ -312,7 +405,7 @@ iframe {
 
 .track-artist {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   margin-bottom: 1px;
   font-size: 16px !important;
 }
@@ -323,8 +416,8 @@ iframe {
 }
 
 .progress-container {
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   padding: 4px;
   flex-shrink: 0;
 }
@@ -353,7 +446,7 @@ iframe {
   top: 0;
   width: 2px;
   height: 100%;
-  background: #fff;
+  background: #2d2d2d;
   box-shadow: 1px 0 0 #000;
 }
 
@@ -361,7 +454,7 @@ iframe {
   display: flex;
   justify-content: space-between;
   font-size: 10px;
-  color: #000;
+  color: #f8f8f2;
   font-family: 'Courier New', monospace;
 }
 
@@ -376,24 +469,39 @@ iframe {
 }
 
 .control-btn {
-  background: #c0c0c0;
-  border: 2px outset #c0c0c0;
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-  min-width: 20px;
-  min-height: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #2a2a2a !important;
+  border: none !important;
+  border-top: 1px solid #4a4a4a !important;
+  border-left: 1px solid #4a4a4a !important;
+  border-bottom: 1px solid #1a1a1a !important;
+  border-right: 1px solid #1a1a1a !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  min-width: 20px !important;
+  min-height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #f8f8f2 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-family: 'Tahoma', 'Arial', sans-serif !important;
+  font-feature-settings: "liga" 0, "kern" 1 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
 }
 
 .control-btn:active {
-  border: 2px inset #c0c0c0;
+  border-top: 1px solid #1a1a1a !important;
+  border-left: 1px solid #1a1a1a !important;
+  border-bottom: 1px solid #4a4a4a !important;
+  border-right: 1px solid #4a4a4a !important;
+  background: #1a1a1a !important;
 }
 
 .control-btn:hover {
-  background: #d0d0d0;
+  background: #3a3a3a !important;
 }
 
 .volume-slider-container {
@@ -431,16 +539,17 @@ iframe {
 }
 
 .station-info {
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   padding: 4px;
   text-align: center;
+  color: #f8f8f2;
   flex-shrink: 0;
 }
 
 .station-name {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   margin-bottom: 2px;
 }
 
@@ -528,7 +637,7 @@ iframe {
 }
 
 #historyWindow iframe {
-  background: #f0f0f0;
+  background: #3c3c3c;
   border: 1px inset #c0c0c0;
 }
 
@@ -540,7 +649,7 @@ iframe {
 }
 
 #requestWindow iframe {
-  background: #f0f0f0;
+  background: #3c3c3c;
   border: 1px inset #c0c0c0;
 }
 
@@ -574,10 +683,11 @@ iframe {
 /* Custom History Display Styles */
 .custom-history {
   padding: 8px;
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #3c3c3c;
+  border: 1px inset #75715e;
   font-family: 'Tahoma', sans-serif;
   font-size: 12px;
+  color: #f8f8f2;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
@@ -596,44 +706,59 @@ iframe {
   align-items: center;
   margin-bottom: 8px;
   padding: 4px;
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   flex-shrink: 0;
 }
 
 .history-title {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
 }
 
 .refresh-btn {
-  background: #c0c0c0;
-  border: 2px outset #c0c0c0;
-  padding: 2px 6px;
-  font-size: 11px;
-  cursor: pointer;
-  min-width: 20px;
-  min-height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: #2a2a2a !important;
+  border: none !important;
+  border-top: 1px solid #4a4a4a !important;
+  border-left: 1px solid #4a4a4a !important;
+  border-bottom: 1px solid #1a1a1a !important;
+  border-right: 1px solid #1a1a1a !important;
+  padding: 2px 6px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  min-width: 20px !important;
+  min-height: 16px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  color: #f8f8f2 !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  font-family: 'Tahoma', 'Arial', sans-serif !important;
+  font-feature-settings: "liga" 0, "kern" 1 !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
 }
 
 .refresh-btn:active {
-  border: 2px inset #c0c0c0;
-  transform: scale(0.95);
+  border-top: 1px solid #1a1a1a !important;
+  border-left: 1px solid #1a1a1a !important;
+  border-bottom: 1px solid #4a4a4a !important;
+  border-right: 1px solid #4a4a4a !important;
+  background: #1a1a1a !important;
+  transform: scale(0.95) !important;
 }
 
 .refresh-btn:hover {
-  background: #d0d0d0;
-  transform: scale(1.05);
+  background: #3a3a3a !important;
+  transform: scale(1.05) !important;
 }
 
 .history-list {
   flex: 1;
   overflow-y: auto;
-  background: #f0f0f0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   padding: 4px;
   min-height: 0;
   max-height: 300px;
@@ -644,7 +769,7 @@ iframe {
   align-items: center;
   padding: 8px 10px;
   margin-bottom: 4px;
-  background: #fff;
+  background: #2d2d2d;
   border: 1px solid #c0c0c0;
   border-radius: 2px;
   font-size: 11px;
@@ -711,7 +836,7 @@ iframe {
 
 .history-track-title {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -745,10 +870,11 @@ iframe {
 /* Custom Requests Interface Styles */
 .custom-requests {
   padding: 8px;
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #3c3c3c;
+  border: 1px inset #75715e;
   font-family: 'Tahoma', sans-serif;
   font-size: 12px;
+  color: #f8f8f2;
   overflow-y: auto;
   height: 100%;
   box-sizing: border-box;
@@ -764,7 +890,7 @@ iframe {
 
 .songs-section,
 .leaderboard-section {
-  background: #f0f0f0;
+  background: #3c3c3c;
   border: 1px inset #c0c0c0;
   padding: 8px;
   display: flex;
@@ -787,8 +913,8 @@ iframe {
   align-items: center;
   margin-bottom: 8px;
   padding: 4px;
-  background: #c0c0c0;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   flex-shrink: 0;
 }
 
@@ -799,15 +925,15 @@ iframe {
 
 .section-title {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
 }
 
 .songs-list,
 .leaderboard-list {
   flex: 1;
   overflow-y: auto;
-  background: #fff;
-  border: 1px inset #c0c0c0;
+  background: #2d2d2d;
+  border: 1px inset #75715e;
   padding: 4px;
   min-height: 0;
 }
@@ -825,7 +951,7 @@ iframe {
   align-items: center;
   padding: 8px 10px;
   margin-bottom: 4px;
-  background: #fff;
+  background: #2d2d2d;
   border: 1px solid #c0c0c0;
   border-radius: 2px;
   font-size: 11px;
@@ -885,7 +1011,7 @@ iframe {
 
 .song-title {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -903,40 +1029,58 @@ iframe {
 }
 
 .song-request-btn {
-  background: #000080;
-  color: #fff;
-  border: 2px outset #000080;
-  padding: 2px 8px;
-  font-size: 11px;
-  cursor: pointer;
-  font-family: 'Tahoma', sans-serif;
-  font-weight: bold;
-  min-width: 50px;
-  min-height: 16px;
+  background: #2a2a2a !important;
+  color: #f8f8f2 !important;
+  border: none !important;
+  border-top: 1px solid #4a4a4a !important;
+  border-left: 1px solid #4a4a4a !important;
+  border-bottom: 1px solid #1a1a1a !important;
+  border-right: 1px solid #1a1a1a !important;
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  cursor: pointer !important;
+  font-family: 'Tahoma', sans-serif !important;
+  font-weight: bold !important;
+  min-width: 50px !important;
+  min-height: 16px !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  letter-spacing: 0 !important;
+  word-spacing: 0 !important;
 }
 
 .song-request-btn:active {
-  border: 2px inset #000080;
+  border-top: 1px solid #1a1a1a !important;
+  border-left: 1px solid #1a1a1a !important;
+  border-bottom: 1px solid #4a4a4a !important;
+  border-right: 1px solid #4a4a4a !important;
+  background: #1a1a1a !important;
 }
 
 .song-request-btn:hover {
-  background: #0000a0;
+  background: #3a3a3a !important;
 }
 
 .song-request-btn:disabled {
-  background: #808080;
-  color: #c0c0c0;
-  border: 2px inset #808080;
-  cursor: not-allowed;
+  background: #1a1a1a !important;
+  color: #666 !important;
+  border-top: 1px solid #333 !important;
+  border-left: 1px solid #333 !important;
+  border-bottom: 1px solid #333 !important;
+  border-right: 1px solid #333 !important;
+  cursor: not-allowed !important;
 }
 
 .song-request-btn.requested {
-  background: #008000;
-  border: 2px outset #008000;
+  background: #2a4a2a !important;
+  border-top: 1px solid #4a6a4a !important;
+  border-left: 1px solid #4a6a4a !important;
+  border-bottom: 1px solid #1a3a1a !important;
+  border-right: 1px solid #1a3a1a !important;
 }
 
 .song-request-btn.requested:hover {
-  background: #00a000;
+  background: #3a5a3a !important;
 }
 
 .leaderboard-item {
@@ -944,7 +1088,7 @@ iframe {
   align-items: center;
   padding: 4px 6px;
   margin-bottom: 2px;
-  background: #fff;
+  background: #2d2d2d;
   border: 1px solid #c0c0c0;
   font-size: 10px;
   transition: background-color 0.2s;
@@ -976,7 +1120,7 @@ iframe {
 
 .leaderboard-song {
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -995,7 +1139,7 @@ iframe {
   margin-top: 8px;
   padding: 6px 12px;
   border: 1px inset #c0c0c0;
-  background: #f0f0f0;
+  background: #3c3c3c;
   font-size: 11px;
   font-weight: bold;
   text-align: center;
@@ -1188,7 +1332,7 @@ iframe {
   display: flex;
   align-items: center;
   padding: 8px;
-  background: #f0f0f0;
+  background: #3c3c3c;
   border: 1px inset #c0c0c0;
   flex-shrink: 0;
 }
@@ -1202,7 +1346,7 @@ iframe {
 .video-name {
   font-size: 12px;
   font-weight: bold;
-  color: #000;
+  color: #f8f8f2;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

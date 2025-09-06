@@ -75,6 +75,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add taskbar button
     const btn = document.createElement("button");
+    btn.className = "taskbar-btn";
     btn.textContent = title.querySelector(".title-bar-text").textContent;
     btn.addEventListener("click", () => {
       win.classList.toggle("hidden");
@@ -681,15 +682,10 @@ let recentRequests = [];
 
 function initializeCustomRequests() {
   const refreshSongsBtn = document.getElementById('refresh-songs');
-  const shuffleSongsBtn = document.getElementById('shuffle-songs');
   const refreshLeaderboardBtn = document.getElementById('refresh-leaderboard');
   
   if (refreshSongsBtn) {
     refreshSongsBtn.addEventListener('click', loadAvailableSongs);
-  }
-  
-  if (shuffleSongsBtn) {
-    shuffleSongsBtn.addEventListener('click', shuffleCurrentSongs);
   }
   
   if (refreshLeaderboardBtn) {

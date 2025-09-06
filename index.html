@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JTrap Family Radio</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
   <link rel="stylesheet" href="https://unpkg.com/98.css" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -12,7 +13,15 @@
     <div class="title-bar-text">JTrap Family Radio Station</div>
   </div>
 
-  <div id="taskbar" class="taskbar"></div>
+  <div id="taskbar" class="taskbar">
+    <button class="taskbar-btn" onclick="toggleWindow('media-player-window')">🎬 Videos</button>
+    <div class="taskbar-clock" id="taskbar-clock">12:00 AM</div>
+  </div>
+  
+  <!-- Walking Cat Desktop Stripper -->
+  <div id="walking-cat" class="walking-cat">
+    <img src="img/walking.gif" alt="Walking Cat" class="cat-gif">
+  </div>
   <button id="reset-windows" style="
   position: fixed;
   top: 10px;
@@ -21,66 +30,145 @@
   font-family: 'Tahoma', sans-serif;
 ">↺ Reset Windows</button>
   
-<div class="window" id="now-playing-window" style="top: 100px; left: 100px; width: 320px;">
-  <div class="title-bar">
-    <div class="title-bar-text">Now Playing</div>
-    <div class="title-bar-controls">
-      <button aria-label="Minimize" onclick="minimizeWindow('now-playing-window')"></button>
-    </div>
-  </div>
-  <div class="window-body" style="font-size: 12px; display: flex; flex-direction: row; align-items: center; gap: 10px;">
-    <img id="album-art" src="" alt="Album Art" style="width: 80px; height: 80px; border: 2px solid black; display: none;">
-    <div style="flex: 1; overflow: hidden;">
-      <div id="marquee-container" style="white-space: nowrap; overflow: hidden; position: relative; height: 20px; border: 1px solid black; background: #000; color: #0f0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 14px;">
-        <div id="marquee-text" style="position: absolute; will-change: transform;"></div>
-      </div>
-      <div id="playback-state" style="margin-top: 4px; font-size: 11px; color: teal;">Loading...</div>
-      <div id="time-elapsed" style="margin-top: 2px; font-size: 10px; color: gray;">0:00 / 0:00</div>
-     <div id="progress-container" style="width: 100%; padding: 0 10px; box-sizing: border-box; margin-top: 8px;">
-  <div id="progress-bar" style="width: 100%; height: 8px; background: #333; border: 1px solid #0f0; border-radius: 4px; box-sizing: border-box;">
-    <div id="progress-fill" style="height: 100%; width: 0%; background: #0f0; border-radius: 4px;"></div>
-  </div>
-</div>
-
-</div>
-
-    </div>
-  </div>
-</div>
 
 
   <div id="playerWindow" class="window" data-title="Player">
     <div class="title-bar">
-      <div class="title-bar-text">Now Playing</div>
+      <div class="title-bar-text">🎵 Now Playing</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" onclick="minimizeWindow('playerWindow')"></button>
       </div>
     </div>
-    <div class="window-body">
-    <iframe src="http://127.0.0.1/public/jtrap_radio/embed?theme=dark" frameborder="0" allowtransparency="true" style="width: 100%; min-height: 150px; border: 0;"></iframe> </div>
+    <div class="window-body custom-player">
+      <!-- Custom Windows 98 Styled Player -->
+      <div class="player-container">
+        <!-- Album Art -->
+        <div class="album-art-container">
+          <img id="custom-album-art" src="" alt="Album Art" class="album-art">
+          <div id="no-art-placeholder" class="no-art-placeholder">♪</div>
+        </div>
+        
+        <!-- Track Info -->
+        <div class="track-info">
+          <div class="track-title-container">
+            <div id="custom-track-title" class="track-title">Loading...</div>
+          </div>
+          <div id="custom-track-artist" class="track-artist">Unknown Artist</div>
+          <div id="custom-track-album" class="track-album">Unknown Album</div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div id="custom-progress-fill" class="progress-fill"></div>
+          </div>
+          <div class="time-display">
+            <span id="custom-time-elapsed" class="time-elapsed">0:00</span>
+            <span id="custom-time-remaining" class="time-remaining">0:00</span>
+          </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="player-controls">
+          <button id="play-pause-btn" class="control-btn play-btn">▶</button>
+          <button id="volume-btn" class="control-btn volume-btn">🔊</button>
+          <div class="volume-slider-container">
+            <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
+          </div>
+        </div>
+        
+        <!-- Station Info -->
+        <div class="station-info">
+          <div id="custom-station-name" class="station-name">JTrap Family Radio</div>
+          <div id="custom-listeners" class="listeners">Listeners: 0</div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div id="historyWindow" class="window" data-title="History">
     <div class="title-bar">
-      <div class="title-bar-text">History</div>
+      <div class="title-bar-text">📜 History</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" onclick="minimizeWindow('historyWindow')"></button>
       </div>
     </div>
-    <div class="window-body">
-      <iframe src="http://127.0.0.1/public/jtrap_radio/history?theme=light" frameborder="0" allowtransparency="true" style="width: 100%; min-height: 300px; border: 0;"></iframe>
+    <div class="window-body custom-history">
+      <div class="history-container">
+        <div class="history-header">
+          <div class="history-title">Recent Tracks</div>
+          <button id="refresh-history" class="refresh-btn">↻</button>
+        </div>
+        <div class="history-list" id="history-list">
+          <div class="history-loading">Loading history...</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <div id="requestWindow" class="window" data-title="Requests">
     <div class="title-bar">
-      <div class="title-bar-text">Requests</div>
+      <div class="title-bar-text">🎤 Requests</div>
       <div class="title-bar-controls">
         <button aria-label="Minimize" onclick="minimizeWindow('requestWindow')"></button>
       </div>
     </div>
+    <div class="window-body custom-requests">
+      <div class="requests-container">
+        <!-- Song List -->
+        <div class="songs-section">
+          <div class="section-header">
+            <div class="section-title">Request a Song</div>
+            <button id="refresh-songs" class="refresh-btn">↻</button>
+          </div>
+          
+          <div class="songs-list" id="songs-list">
+            <div class="songs-loading">Loading songs...</div>
+          </div>
+        </div>
+        
+        <!-- Top Requests Leaderboard -->
+        <div class="leaderboard-section">
+          <div class="section-header">
+            <div class="section-title">Top Requests</div>
+            <button id="refresh-leaderboard" class="refresh-btn">↻</button>
+          </div>
+          
+          <div class="leaderboard-list" id="leaderboard-list">
+            <div class="leaderboard-loading">Loading leaderboard...</div>
+          </div>
+        </div>
+        
+        <!-- Status Messages -->
+        <div id="request-status" class="request-status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Media Player Window -->
+  <div class="window" id="media-player-window" style="display: none; position: absolute; top: 150px; left: 200px; width: 500px; height: 400px; z-index: 1000;">
+    <div class="title-bar">
+      <div class="title-bar-text">🎬 Videos</div>
+      <div class="title-bar-controls">
+        <button aria-label="Minimize"></button>
+      </div>
+    </div>
     <div class="window-body">
-     <iframe src="http://127.0.0.1/public/jtrap_radio/embed-requests?theme=dark" frameborder="0" allowtransparency="true" style="width: 100%; min-height: 850px; border: 0;"></iframe>    </div>
+      <div class="custom-media-player">
+        <div class="media-container">
+          <div class="media-display" id="media-display">
+            <div class="media-placeholder">Select a video to play</div>
+          </div>
+          <div class="media-controls">
+            <button id="prev-video-btn" class="control-btn">⏮</button>
+            <div class="video-info">
+              <div id="current-video-name" class="video-name">No video selected</div>
+            </div>
+            <button id="next-video-btn" class="control-btn">⏭</button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script src="script.js"></script>

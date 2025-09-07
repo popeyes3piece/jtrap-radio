@@ -10,6 +10,8 @@ let currentMenu = 'main';
 let inputBuffer = '';
 let passwordAttempts = 0;
 let supabase = null;
+let passwordMode = false;
+let maskedPassword = '';
 
 // Initialize Supabase connection
 function initSupabase() {
@@ -20,6 +22,38 @@ function initSupabase() {
     }
   }
   return false;
+}
+
+// Check if we're in password input mode
+function isPasswordMode() {
+  return passwordMode;
+}
+
+// Password input handler with masking
+function handlePasswordInput(char) {
+  if (char === '\r' || char === '\n') {
+    // Enter pressed - process the password
+    passwordMode = false;
+    const password = maskedPassword;
+    maskedPassword = ''; // Clear the password buffer
+    return password;
+  } else if (char === '\b' || char === '\x7f') {
+    // Backspace - remove last character
+    if (maskedPassword.length > 0) {
+      maskedPassword = maskedPassword.slice(0, -1);
+      // Clear the line and re-display the masked password
+      terminal.write('\r\x1b[K');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ' + '*'.repeat(maskedPassword.length));
+    }
+    return null;
+  } else if (char >= ' ' && char <= '~') {
+    // Printable character - add to password
+    maskedPassword += char;
+    // Display asterisk
+    terminal.write('*');
+    return null;
+  }
+  return null;
 }
 
 // BBS Login Screen
@@ -178,6 +212,8 @@ async function handleLogin(command) {
         currentUser = data;
         passwordAttempts = 0; // Reset password attempts for new user
         terminal.writeln(`\x1b[32mFound user: ${data.username}\x1b[0m`);
+        passwordMode = true;
+        maskedPassword = '';
         terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       } catch (err) {
         console.error('Database error:', err);
@@ -212,6 +248,8 @@ async function handleLogin(command) {
       passwordAttempts++;
       if (passwordAttempts < 3) {
         terminal.writeln(`\x1b[31mInvalid password. Try again (${passwordAttempts}/3 attempts).\x1b[0m`);
+        passwordMode = true;
+        maskedPassword = '';
         terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       } else {
         terminal.writeln('\x1b[31mToo many failed attempts. Returning to login.\x1b[0m');
@@ -286,11 +324,15 @@ async function handleRegistration(command) {
     
     currentUser = { username: command.toLowerCase(), step: 'password' };
     terminal.writeln(`\x1b[32mUsername: ${command}\x1b[0m`);
+    passwordMode = true;
+    maskedPassword = '';
     terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
   } else if (currentUser.step === 'password') {
     // Password input
     if (command.trim() === '') {
       terminal.writeln('\x1b[31mPassword cannot be empty. Try again or type "exit", "back", or "cancel" to return.\x1b[0m');
+      passwordMode = true;
+      maskedPassword = '';
       terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       return;
     }
@@ -944,7 +986,9 @@ try {
     handleBBSCommand,
     bbsMode: () => bbsMode,
     setBBSMode: (mode) => { bbsMode = mode; },
-    reinitSupabase
+    reinitSupabase,
+    isPasswordMode,
+    handlePasswordInput
   };
 } catch (error) {
   console.error('BBS: Error exporting functions:', error);

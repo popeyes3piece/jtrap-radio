@@ -122,6 +122,22 @@ function setupCommandHandling() {
   let currentLine = '';
   
   terminal.onData(data => {
+    // Check if we're in password mode
+    if (window.BBS && window.BBS.isPasswordMode && window.BBS.isPasswordMode()) {
+      const result = window.BBS.handlePasswordInput(data);
+      if (result !== null) {
+        // Password input complete, process it
+        if (window.BBS && window.BBS.bbsMode()) {
+          window.BBS.handleBBSCommand(result);
+        }
+        currentLine = '';
+        if (!window.BBS || !window.BBS.bbsMode()) {
+          terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+        }
+      }
+      return;
+    }
+    
     if (data === '\r') { // Enter key
       terminal.writeln('');
       if (window.BBS && window.BBS.bbsMode()) {

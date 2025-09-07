@@ -6,82 +6,15 @@ let availableSongs = [];
 // Initialize custom requests
 function initializeCustomRequests() {
   const refreshSongsBtn = document.getElementById('refresh-songs');
-  const refreshLeaderboardBtn = document.getElementById('refresh-leaderboard');
   
   if (refreshSongsBtn) {
     refreshSongsBtn.addEventListener('click', loadAvailableSongs);
   }
   
-  if (refreshLeaderboardBtn) {
-    refreshLeaderboardBtn.addEventListener('click', updateLeaderboard);
-  }
-  
-  // Initialize draggable divider
-  initializeSectionDivider();
-  
   // Load initial data
   loadAvailableSongs();
-  updateLeaderboard();
 }
 
-// Initialize draggable divider between sections
-function initializeSectionDivider() {
-  const divider = document.getElementById('section-divider');
-  const songsSection = document.getElementById('songs-section');
-  const leaderboardSection = document.getElementById('leaderboard-section');
-  
-  if (!divider || !songsSection || !leaderboardSection) return;
-  
-  let isDragging = false;
-  let startY = 0;
-  let startSongsHeight = 0;
-  let startLeaderboardHeight = 0;
-  
-  divider.addEventListener('mousedown', (e) => {
-    e.preventDefault();
-    isDragging = true;
-    startY = e.clientY;
-    startSongsHeight = songsSection.offsetHeight;
-    startLeaderboardHeight = leaderboardSection.offsetHeight;
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  });
-  
-  function handleMouseMove(e) {
-    if (!isDragging) return;
-    
-    const deltaY = e.clientY - startY;
-    const newSongsHeight = startSongsHeight + deltaY;
-    const newLeaderboardHeight = startLeaderboardHeight - deltaY;
-    
-    // Set minimum heights
-    const minHeight = 100;
-    if (newSongsHeight >= minHeight && newLeaderboardHeight >= minHeight) {
-      songsSection.style.flex = 'none';
-      leaderboardSection.style.flex = 'none';
-      songsSection.style.height = newSongsHeight + 'px';
-      leaderboardSection.style.height = newLeaderboardHeight + 'px';
-    }
-  }
-  
-  function handleMouseUp() {
-    isDragging = false;
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
-  }
-  
-  // Reset sections to fill available space
-  function resetSectionsToFillSpace() {
-    songsSection.style.flex = '1 1 0';
-    leaderboardSection.style.flex = '1 1 0';
-    songsSection.style.height = '';
-    leaderboardSection.style.height = '';
-  }
-  
-  // Listen for window resize to reset sections
-  window.addEventListener('resize', resetSectionsToFillSpace);
-}
 
 // Load available songs for requests
 async function loadAvailableSongs() {
@@ -249,64 +182,6 @@ async function requestSong(songId) {
   }
 }
 
-// Update leaderboard - simple approach like the old script
-async function updateLeaderboard() {
-  try {
-    // Try the same endpoints we use for available songs
-    const possibleEndpoints = [
-      '/api/station/1/requests',
-      '/api/station/jtrap_radio/requests',
-      '/api/requests'
-    ];
-    
-    let leaderboard = [];
-    
-    for (const endpoint of possibleEndpoints) {
-      try {
-        const apiUrl = window.getApiUrl(endpoint);
-        const res = await window.fetchWithCorsBypass(apiUrl);
-        
-        if (res.ok) {
-          const data = await res.json();
-          // Use the same data structure as available songs
-          leaderboard = data || [];
-          break;
-        }
-      } catch (e) {
-        continue;
-      }
-    }
-    
-    // Update the UI with leaderboard data
-    updateLeaderboardDisplay(leaderboard);
-    
-  } catch (e) {
-    console.error("Error loading leaderboard:", e);
-    updateLeaderboardDisplay([]);
-  }
-}
-
-// Update the leaderboard display in the UI
-function updateLeaderboardDisplay(leaderboard) {
-  const leaderboardList = document.getElementById('leaderboard-list');
-  if (!leaderboardList) return;
-  
-  if (leaderboard.length === 0) {
-    leaderboardList.innerHTML = '<div class="no-data">No requested songs available</div>';
-    return;
-  }
-  
-  // Simple display like the old script
-  leaderboardList.innerHTML = leaderboard.map((item, index) => `
-    <div class="leaderboard-item">
-      <div class="rank">#${index + 1}</div>
-      <div class="song-details">
-        <div class="song-title">${item.song?.title || item.title || 'Unknown Song'}</div>
-        <div class="song-artist">${item.song?.artist || item.artist || 'Unknown Artist'}</div>
-      </div>
-    </div>
-  `).join('');
-}
 
 
 // Show status message
@@ -343,7 +218,6 @@ function clearStatus() {
 window.Requests = {
   initializeCustomRequests,
   loadAvailableSongs,
-  updateLeaderboard,
   requestSong,
   showStatus,
   clearStatus

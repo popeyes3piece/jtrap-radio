@@ -268,14 +268,27 @@ function initializeCustomPlayer() {
     volumeSlider.addEventListener('input', (e) => {
       currentVolume = e.target.value;
       if (audioElement) {
-        audioElement.volume = currentVolume / 100;
+        // For iOS, we need to ensure user interaction before changing volume
+        if (audioElement.volume !== undefined) {
+          audioElement.volume = currentVolume / 100;
+        }
       }
     });
+    
+    // Add iOS-specific note
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    if (isIOS) {
+      volumeSlider.title = 'Volume may be controlled by device on iOS';
+    }
   }
-  
+
   const volumeBtn = document.getElementById('volume-btn');
   if (volumeBtn) {
-    volumeBtn.addEventListener('click', toggleMute);
+    volumeBtn.addEventListener('click', (e) => {
+      // Ensure user interaction is properly handled for iOS
+      e.preventDefault();
+      toggleMute();
+    });
   }
 }
 
@@ -297,12 +310,22 @@ function toggleMute() {
   if (!audioElement) return;
   
   const volumeBtn = document.getElementById('volume-btn');
-  if (audioElement.volume > 0) {
-    audioElement.volume = 0;
-    volumeBtn.textContent = '🔇';
-  } else {
-    audioElement.volume = currentVolume / 100;
-    volumeBtn.textContent = '🔊';
+  
+  try {
+    if (audioElement.volume > 0) {
+      audioElement.volume = 0;
+      if (volumeBtn) volumeBtn.textContent = '🔇';
+    } else {
+      audioElement.volume = currentVolume / 100;
+      if (volumeBtn) volumeBtn.textContent = '🔊';
+    }
+  } catch (error) {
+    console.warn('Volume control not available on this device:', error);
+    // On iOS, volume might be controlled by system volume
+    if (volumeBtn) {
+      volumeBtn.textContent = '🔊';
+      volumeBtn.title = 'Volume controlled by device';
+    }
   }
 }
 

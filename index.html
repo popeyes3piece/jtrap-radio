@@ -40,7 +40,7 @@
     <div class="title-bar">
       <div class="title-bar-text">🎵 Now Playing</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('playerWindow')"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('playerWindow')" ontouchstart="minimizeWindow('playerWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
@@ -98,7 +98,7 @@
     <div class="title-bar">
       <div class="title-bar-text">📜 History</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('historyWindow')"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('historyWindow')" ontouchstart="minimizeWindow('historyWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
@@ -121,7 +121,7 @@
     <div class="title-bar">
       <div class="title-bar-text">🎤 Requests</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('requestWindow')"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('requestWindow')" ontouchstart="minimizeWindow('requestWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
@@ -153,23 +153,29 @@
     <div class="title-bar">
       <div class="title-bar-text">🎬 Videos</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('media-player-window')"></button>
+        <button aria-label="Minimize" onclick="minimizeWindow('media-player-window')" ontouchstart="minimizeWindow('media-player-window')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
-    <div class="window-body">
-      <div class="custom-media-player">
-        <div class="media-container">
-          <div class="media-display" id="media-display">
-            <div class="media-placeholder">Select a video to play</div>
+    <div class="window-body custom-media-player">
+      <div class="media-section" id="media-section">
+        <div class="section-header">
+          <div class="section-title">Video Player</div>
+          <div class="section-buttons">
+            <button id="shuffle-videos-btn" class="refresh-btn" title="Shuffle videos">🔀</button>
           </div>
-          <div class="media-controls">
-            <button id="prev-video-btn" class="control-btn">⏮</button>
-            <div class="video-info">
-              <div id="current-video-name" class="video-name">No video selected</div>
-            </div>
-            <button id="next-video-btn" class="control-btn">⏭</button>
+        </div>
+        <div class="media-display" id="media-display">
+          <video id="video-player" controls style="width: 100%; height: 100%;">
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="media-controls">
+          <button id="prev-video-btn" class="control-btn">⏮</button>
+          <div class="video-info">
+            <div id="current-video-name" class="video-name">No video selected</div>
           </div>
+          <button id="next-video-btn" class="control-btn">⏭</button>
         </div>
       </div>
     </div>
@@ -180,7 +186,7 @@
     <div class="title-bar" onclick="bringToFront(document.getElementById('terminalWindow'))">
       <div class="title-bar-text">💻 Terminal</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="event.stopPropagation(); minimizeWindow('terminalWindow');"></button>
+        <button aria-label="Minimize" onclick="event.stopPropagation(); minimizeWindow('terminalWindow');" ontouchstart="event.stopPropagation(); minimizeWindow('terminalWindow');"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>

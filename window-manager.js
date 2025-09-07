@@ -239,14 +239,10 @@ function initializeWindows() {
     const title = win.querySelector(".title-bar");
     const id = win.id;
 
-    // Handle media player window specially (no auto taskbar button, but add dragging)
-    if (id === 'media-player-window') {
-      // Add dragging functionality to these windows
-      makeWindowDraggable(win, title);
-      // Add click handler to bring to front
-      title.addEventListener("click", () => bringToFront(win));
-      return;
-    }
+    // Add dragging functionality to all windows
+    makeWindowDraggable(win, title);
+    // Add click handler to bring to front
+    title.addEventListener("click", () => bringToFront(win));
 
     // Restore position from localStorage (with mobile adjustments)
     const saved = localStorage.getItem(`win-${id}`);

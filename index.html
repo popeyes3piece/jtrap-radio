@@ -8,6 +8,10 @@
   <link rel="stylesheet" href="https://unpkg.com/98.css" />
   <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
   <link rel="stylesheet" href="style.css" />
+  
+  <!-- Load xterm.js early -->
+  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
 </head>
 <body>
   <div id="top-banner" class="title-bar">
@@ -15,8 +19,6 @@
   </div>
 
   <div id="taskbar" class="taskbar">
-    <button class="taskbar-btn" onclick="toggleWindow('media-player-window')">🎬 Videos</button>
-    <button class="taskbar-btn" onclick="toggleWindow('terminalWindow')">💻 Terminal</button>
     <div class="taskbar-clock" id="taskbar-clock">12:00 AM</div>
   </div>
   
@@ -101,10 +103,12 @@
     </div>
     <div class="resize-handle resize-se"></div>
     <div class="window-body custom-history">
-      <div class="history-container">
-        <div class="history-header">
-          <div class="history-title">Recent Tracks</div>
-          <button id="refresh-history" class="refresh-btn">↻</button>
+      <div class="history-section" id="history-section">
+        <div class="section-header">
+          <div class="section-title">Recent Tracks</div>
+          <div class="section-buttons">
+            <button id="refresh-history" class="refresh-btn" title="Refresh history">🔄</button>
+          </div>
         </div>
         <div class="history-list" id="history-list">
           <div class="history-loading">Loading history...</div>
@@ -122,13 +126,16 @@
     </div>
     <div class="resize-handle resize-se"></div>
     <div class="window-body custom-requests">
+      <!-- Status Messages -->
+      <div id="request-status" class="request-status"></div>
+      
       <div class="requests-container">
         <!-- Song List -->
-        <div class="songs-section">
+        <div class="songs-section" id="songs-section">
           <div class="section-header">
             <div class="section-title">Request a Song</div>
             <div class="section-buttons">
-              <button id="refresh-songs" class="refresh-btn" title="Refresh songs">↻</button>
+              <button id="refresh-songs" class="refresh-btn" title="Refresh songs">🔄</button>
             </div>
           </div>
           
@@ -137,20 +144,20 @@
           </div>
         </div>
         
+        <!-- Draggable Divider -->
+        <div class="section-divider" id="section-divider"></div>
+        
         <!-- Top Requests Leaderboard -->
-        <div class="leaderboard-section">
+        <div class="leaderboard-section" id="leaderboard-section">
           <div class="section-header">
-            <div class="section-title">Top Requests</div>
-            <button id="refresh-leaderboard" class="refresh-btn">↻</button>
+            <div class="section-title">Requested Songs</div>
+            <button id="refresh-leaderboard" class="refresh-btn">🔄</button>
           </div>
           
           <div class="leaderboard-list" id="leaderboard-list">
-            <div class="leaderboard-loading">Loading leaderboard...</div>
+            <div class="leaderboard-loading">Loading requests...</div>
           </div>
         </div>
-        
-        <!-- Status Messages -->
-        <div id="request-status" class="request-status"></div>
       </div>
     </div>
   </div>
@@ -183,26 +190,31 @@
   </div>
 
   <!-- Terminal Window -->
-  <div class="window" id="terminalWindow" data-title="Terminal" style="display: none; position: absolute; top: 100px; left: 300px; width: 600px; height: 400px; z-index: 1000;">
+  <div class="window" id="terminalWindow" data-title="Terminal" style="display: none; position: absolute; top: 100px; left: 300px; width: 520px; height: 400px; z-index: 1000;">
     <div class="title-bar" onclick="bringToFront(document.getElementById('terminalWindow'))">
       <div class="title-bar-text">💻 Terminal</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('terminalWindow')"></button>
+        <button aria-label="Minimize" onclick="event.stopPropagation(); minimizeWindow('terminalWindow');"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
-    <div class="window-body terminal-body">
+    <div class="window-body">
       <div id="terminal"></div>
     </div>
   </div>
 
-  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
-  <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
-  <script src="populate-database.js"></script>
   <script src="bbs-supabase.js"></script>
-  <script src="bbs-fallback.js"></script>
+  <script src="bbs-local.js"></script>
+  
+  <!-- Modular JavaScript -->
+  <script src="window-manager.js"></script>
+  <script src="audio-player.js"></script>
+  <script src="requests.js"></script>
+  <script src="history.js"></script>
+  <script src="terminal.js"></script>
+  <script src="media-player.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

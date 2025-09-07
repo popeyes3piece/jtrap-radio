@@ -1,11 +1,14 @@
 // BBS System with Supabase Integration for JTrap Family Radio
 // Real-time bulletin board system with persistent data
 
+
+try {
 // BBS System Variables
 let currentUser = null;
 let bbsMode = false;
 let currentMenu = 'main';
 let inputBuffer = '';
+let passwordAttempts = 0;
 let supabase = null;
 
 // Initialize Supabase connection
@@ -13,33 +16,34 @@ function initSupabase() {
   if (window.getSupabase) {
     supabase = window.getSupabase();
     if (supabase) {
-      console.log('BBS: Supabase connected successfully!');
       return true;
     }
   }
-  console.error('BBS: Supabase not available');
   return false;
 }
 
 // BBS Login Screen
 function showBBSLogin() {
   terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                                                              ║\x1b[0m');
-  terminal.writeln('\x1b[32m║              🎵 JTrap Family Radio BBS 🎵                    ║\x1b[0m');
-  terminal.writeln('\x1b[32m║                                                              ║\x1b[0m');
-  terminal.writeln('\x1b[32m║              Welcome to the Bulletin Board System             ║\x1b[0m');
-  terminal.writeln('\x1b[32m║                                                              ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+  terminal.writeln('╔══════════════════════════════════════════════════════╗');
+  terminal.writeln('║                JTRAP FAMILY RADIO                    ║');
+  terminal.writeln('╠══════════════════════════════════════════════════════╣');
+  terminal.writeln('║                                                      ║');
+  terminal.writeln('║         Welcome to the Bulletin Board System         ║');
+  terminal.writeln('║                                                      ║');
+  terminal.writeln('╚══════════════════════════════════════════════════════╝');
   terminal.writeln('');
-  terminal.writeln('\x1b[33mLogin to access the BBS system:\x1b[0m');
-  terminal.writeln('\x1b[36mUsername: guest\x1b[0m');
-  terminal.writeln('\x1b[36mPassword: (press Enter for guest access)\x1b[0m');
+  terminal.writeln('╔══════════════════════════════════════════════════════╗');
+  terminal.writeln('║                Login Instructions                    ║');
+  terminal.writeln('╠══════════════════════════════════════════════════════╣');
+  terminal.writeln('║                                                      ║');
+  terminal.writeln('║  • Type your username and password to login          ║');
+  terminal.writeln('║  • Type "register" to create a new account           ║');
+  terminal.writeln('║  • Type "exit" to return to main terminal            ║');
+  terminal.writeln('║                                                      ║');
+  terminal.writeln('╚══════════════════════════════════════════════════════╝');
   terminal.writeln('');
-  terminal.writeln('\x1b[35mOr type "register" to create a new account\x1b[0m');
-  terminal.writeln('\x1b[35mOr type "exit" to return to main terminal\x1b[0m');
-  terminal.writeln('');
-  terminal.write('\x1b[32mUsername: \x1b[0m');
+  terminal.write('Username: ');
   
   bbsMode = true;
   currentMenu = 'login';
@@ -53,30 +57,39 @@ function showBBSLogin() {
 // BBS Main Menu
 function showBBSMainMenu() {
   terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                                                              ║\x1b[0m');
-  terminal.writeln('\x1b[32m║              🎵 JTrap Family Radio BBS 🎵                    ║\x1b[0m');
-  terminal.writeln('\x1b[32m║                                                              ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+  terminal.writeln('┌─◆══════════════════════════════════════════════◆─┐');
+  terminal.writeln('│                                                  │');
+  terminal.writeln('│        🎵 JTrap Family Radio BBS 🎵               │');
+  terminal.writeln('│                                                  │');
+  terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.writeln(`\x1b[33mWelcome back, ${currentUser.username}!\x1b[0m`);
-  terminal.writeln(`\x1b[36mUser Level: ${currentUser.user_level ? currentUser.user_level.toUpperCase() : 'USER'}\x1b[0m`);
-  terminal.writeln(`\x1b[36mLast Login: ${currentUser.last_login ? new Date(currentUser.last_login).toLocaleString() : 'First time!'}\x1b[0m`);
+  terminal.writeln('┌─◆ User Info ◆══════════════════════════════════◆─┐');
+  const username = currentUser.username.padEnd(15);
+  const userLevel = (currentUser.user_level ? currentUser.user_level.toUpperCase() : 'USER').padEnd(17);
+  const lastLogin = (currentUser.last_login ? new Date(currentUser.last_login).toLocaleString() : 'First time!').padEnd(36);
+  terminal.writeln(`│ User: ${username} │ Level: ${userLevel} │`);
+  terminal.writeln(`│ Last Login: ${lastLogin} │`);
+  terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.writeln('\x1b[35m┌─ Main Menu ─────────────────────────────────────────────────┐\x1b[0m');
-  terminal.writeln('\x1b[35m│                                                              │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [1] Message Boards                                          │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [2] File Downloads                                          │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [3] User Directory                                          │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [4] Chat Room                                               │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [5] Radio Station Info                                      │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [6] System Information                                      │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [7] Change Password                                         │\x1b[0m');
-  terminal.writeln('\x1b[35m│  [8] Logout                                                  │\x1b[0m');
-  terminal.writeln('\x1b[35m│                                                              │\x1b[0m');
-  terminal.writeln('\x1b[35m└──────────────────────────────────────────────────────────────┘\x1b[0m');
+  
+  if (currentUser && currentUser.user_level === 'guest') {
+    terminal.writeln('⚠️  GUEST ACCESS - Limited features available');
+    terminal.writeln('');
+  }
+  
+  terminal.writeln('┌─◆ Main Menu ◆══════════════════════════════════◆─┐');
+  if (currentUser && currentUser.user_level !== 'guest') {
+    terminal.writeln('│ [1] Message Boards     │ [4] Chat Room           │');
+    terminal.writeln('│ [2] File Downloads     │ [5] Change Password     │');
+    terminal.writeln('│ [3] User Directory     │ [6] Logout              │');
+  } else {
+    terminal.writeln('│ [1] Message Boards     │ [4] Chat Room           │');
+    terminal.writeln('│ [2] File Downloads     │ [5] Logout              │');
+    terminal.writeln('│ [3] User Directory     │ [ ] (Register for more) │');
+  }
+  terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.write('\x1b[32mSelect option (1-8): \x1b[0m');
+  terminal.write('Select option (1-6): ');
   
   currentMenu = 'main';
 }
@@ -105,8 +118,11 @@ function handleBBSCommand(command) {
     case 'chat':
       handleChatMenu(command);
       break;
-    case 'system':
-      handleSystemMenu(command);
+    case 'board':
+      handleBoardMenu(command);
+      break;
+    case 'newmessage':
+      handleNewMessage(command);
       break;
     default:
       terminal.writeln('\x1b[31mInvalid menu state!\x1b[0m');
@@ -123,12 +139,11 @@ async function handleLogin(command) {
     terminal.writeln('');
     terminal.writeln('\x1b[36mAvailable commands:\x1b[0m');
     terminal.writeln('  help     - Show this help message');
-    terminal.writeln('  radio    - Show radio station info');
     terminal.writeln('  time     - Show current time');
     terminal.writeln('  clear    - Clear the terminal');
     terminal.writeln('  bbs      - Access BBS system');
     terminal.writeln('');
-    terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mjtrap@radio:~$\x1b[0m ');
     return;
   }
   
@@ -141,7 +156,7 @@ async function handleLogin(command) {
     // Username input
     if (command.trim() === '') {
       terminal.writeln('\x1b[31mUsername cannot be empty. Try again or type "exit" to return.\x1b[0m');
-      terminal.write('\x1b[32mUsername: \x1b[0m');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
       return;
     }
     
@@ -156,49 +171,28 @@ async function handleLogin(command) {
         
         if (error || !data) {
           terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
+          terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
           return;
         }
         
         currentUser = data;
+        passwordAttempts = 0; // Reset password attempts for new user
         terminal.writeln(`\x1b[32mFound user: ${data.username}\x1b[0m`);
-        terminal.write('\x1b[32mPassword: \x1b[0m');
+        terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       } catch (err) {
-        terminal.writeln('\x1b[31mDatabase error. Using fallback login.\x1b[0m');
-        // Fallback to local users
-        const localUsers = [
-          { username: 'admin', password: 'admin', user_level: 'sysop' },
-          { username: 'guest', password: '', user_level: 'user' }
-        ];
-        const user = localUsers.find(u => u.username === command.toLowerCase());
-        if (user) {
-          currentUser = user;
-          terminal.writeln(`\x1b[32mFound user: ${user.username}\x1b[0m`);
-          terminal.write('\x1b[32mPassword: \x1b[0m');
-        } else {
-          terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
-        }
+        console.error('Database error:', err);
+        terminal.writeln('\x1b[31mDatabase error. Please try again.\x1b[0m');
+        terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
+        return;
       }
     } else {
-      // Fallback to local users
-      const localUsers = [
-        { username: 'admin', password: 'admin', user_level: 'sysop' },
-        { username: 'guest', password: '', user_level: 'user' }
-      ];
-      const user = localUsers.find(u => u.username === command.toLowerCase());
-      if (user) {
-        currentUser = user;
-        terminal.writeln(`\x1b[32mFound user: ${user.username}\x1b[0m`);
-        terminal.write('\x1b[32mPassword: \x1b[0m');
-      } else {
-        terminal.writeln('\x1b[31mUser not found. Try again or type "register" to create account.\x1b[0m');
-        terminal.write('\x1b[32mUsername: \x1b[0m');
-      }
+      terminal.writeln('\x1b[31mDatabase not available. Please try again later.\x1b[0m');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
     }
   } else {
     // Password input
-    if (currentUser.password === '' || currentUser.password === command) {
+    
+    if (currentUser && (currentUser.password_hash === '' || currentUser.password_hash === command)) {
       // Update last login in Supabase
       if (supabase && currentUser.id) {
         try {
@@ -215,9 +209,16 @@ async function handleLogin(command) {
       terminal.writeln('\x1b[32mLogin successful!\x1b[0m');
       setTimeout(() => showBBSMainMenu(), 1000);
     } else {
-      terminal.writeln('\x1b[31mInvalid password. Try again.\x1b[0m');
-      terminal.write('\x1b[32mUsername: \x1b[0m');
-      currentUser = null;
+      passwordAttempts++;
+      if (passwordAttempts < 3) {
+        terminal.writeln(`\x1b[31mInvalid password. Try again (${passwordAttempts}/3 attempts).\x1b[0m`);
+        terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
+      } else {
+        terminal.writeln('\x1b[31mToo many failed attempts. Returning to login.\x1b[0m');
+        terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
+        currentUser = null;
+        passwordAttempts = 0;
+      }
     }
   }
 }
@@ -226,18 +227,23 @@ async function handleLogin(command) {
 function showRegistration() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                        User Registration                    ║\x1b[0m');
+  terminal.writeln('\x1b[32m║                        User Registration                     ║\x1b[0m');
   terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
   terminal.writeln('');
   terminal.writeln('\x1b[33mCreate a new BBS account:\x1b[0m');
   terminal.writeln('');
-  terminal.write('\x1b[32mUsername: \x1b[0m');
+  terminal.writeln('\x1b[36m💡 Type "exit" to cancel\x1b[0m');
+  terminal.writeln('');
+  terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
   
   currentMenu = 'register';
 }
 
 async function handleRegistration(command) {
-  if (command.toLowerCase() === 'exit') {
+  const lowerCommand = command.toLowerCase();
+  if (lowerCommand === 'exit' || lowerCommand === 'back' || lowerCommand === 'cancel') {
+    terminal.writeln('\x1b[33mReturning to login screen...\x1b[0m');
+    currentUser = null; // Reset registration state
     showBBSLogin();
     return;
   }
@@ -245,8 +251,8 @@ async function handleRegistration(command) {
   if (!currentUser) {
     // Username input
     if (command.trim() === '') {
-      terminal.writeln('\x1b[31mUsername cannot be empty. Try again or type "exit" to return.\x1b[0m');
-      terminal.write('\x1b[32mUsername: \x1b[0m');
+      terminal.writeln('\x1b[31mUsername cannot be empty. Try again or type "exit", "back", or "cancel" to return.\x1b[0m');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
       return;
     }
     
@@ -256,39 +262,48 @@ async function handleRegistration(command) {
         const { data, error } = await supabase
           .from('users')
           .select('username')
-          .eq('username', command.toLowerCase())
-          .single();
+          .eq('username', command.toLowerCase());
         
-        if (data) {
+        if (error) {
+          console.error('Error checking username:', error);
+          terminal.writeln('\x1b[31mDatabase error. Try again.\x1b[0m');
+          terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
+          return;
+        }
+        
+        if (data && data.length > 0) {
           terminal.writeln('\x1b[31mUsername already taken. Try another.\x1b[0m');
-          terminal.write('\x1b[32mUsername: \x1b[0m');
+          terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
           return;
         }
       } catch (err) {
-        // Username available
+        console.error('Error checking username:', err);
+        terminal.writeln('\x1b[31mDatabase error. Try again.\x1b[0m');
+        terminal.write('\x1b[1m\x1b[4m\x1b[32mUsername:\x1b[0m ');
+        return;
       }
     }
     
     currentUser = { username: command.toLowerCase(), step: 'password' };
     terminal.writeln(`\x1b[32mUsername: ${command}\x1b[0m`);
-    terminal.write('\x1b[32mPassword: \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
   } else if (currentUser.step === 'password') {
     // Password input
     if (command.trim() === '') {
-      terminal.writeln('\x1b[31mPassword cannot be empty. Try again.\x1b[0m');
-      terminal.write('\x1b[32mPassword: \x1b[0m');
+      terminal.writeln('\x1b[31mPassword cannot be empty. Try again or type "exit", "back", or "cancel" to return.\x1b[0m');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       return;
     }
     
     currentUser.password = command;
     currentUser.step = 'email';
     terminal.writeln('\x1b[32mPassword: [HIDDEN]\x1b[0m');
-    terminal.write('\x1b[32mEmail: \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mEmail:\x1b[0m ');
   } else if (currentUser.step === 'email') {
     // Email input
     if (command.trim() === '') {
-      terminal.writeln('\x1b[31mEmail cannot be empty. Try again.\x1b[0m');
-      terminal.write('\x1b[32mEmail: \x1b[0m');
+      terminal.writeln('\x1b[31mEmail cannot be empty. Try again or type "exit", "back", or "cancel" to return.\x1b[0m');
+      terminal.write('\x1b[1m\x1b[4m\x1b[32mEmail:\x1b[0m ');
       return;
     }
     
@@ -297,9 +312,13 @@ async function handleRegistration(command) {
     // Create user in Supabase
     if (supabase) {
       try {
+        // Generate a UUID for the new user
+        const userId = crypto.randomUUID();
+        
         const { data, error } = await supabase
           .from('users')
           .insert([{
+            id: userId,
             username: currentUser.username,
             email: currentUser.email,
             password_hash: currentUser.password, // In production, hash this!
@@ -311,16 +330,20 @@ async function handleRegistration(command) {
           .single();
         
         if (error) {
+          console.error('Registration error:', error);
           terminal.writeln('\x1b[31mRegistration failed: ' + error.message + '\x1b[0m');
           terminal.writeln('\x1b[33mUsing local account instead.\x1b[0m');
           currentUser.user_level = 'user';
           currentUser.last_login = new Date();
         } else {
+          console.log('Registration successful:', data);
           currentUser = data;
           terminal.writeln('\x1b[32mRegistration successful!\x1b[0m');
         }
       } catch (err) {
-        terminal.writeln('\x1b[31mRegistration failed. Using local account.\x1b[0m');
+        console.error('Registration exception:', err);
+        terminal.writeln('\x1b[31mRegistration failed: ' + err.message + '\x1b[0m');
+        terminal.writeln('\x1b[33mUsing local account instead.\x1b[0m');
         currentUser.user_level = 'user';
         currentUser.last_login = new Date();
       }
@@ -350,33 +373,42 @@ function handleMainMenu(command) {
       showChatRoom();
       break;
     case '5':
-      showRadioInfo();
+      if (currentUser && currentUser.user_level !== 'guest') {
+        showChangePassword();
+      } else {
+        logout();
+      }
       break;
     case '6':
-      showSystemInfo();
-      break;
-    case '7':
-      showChangePassword();
-      break;
-    case '8':
-      logout();
+      if (currentUser && currentUser.user_level !== 'guest') {
+        logout();
+      } else {
+        terminal.writeln('\x1b[31mInvalid option! Please select 1-5.\x1b[0m');
+        terminal.write('\x1b[32mSelect option (1-5): \x1b[0m');
+      }
       break;
     default:
-      terminal.writeln('\x1b[31mInvalid option. Please select 1-8.\x1b[0m');
-      terminal.write('\x1b[32mSelect option (1-8): \x1b[0m');
+      const maxOption = (currentUser && currentUser.user_level !== 'guest') ? '6' : '5';
+      terminal.writeln(`\x1b[31mInvalid option! Please select 1-${maxOption}.\x1b[0m`);
+      terminal.write(`\x1b[32mSelect option (1-${maxOption}): \x1b[0m`);
   }
 }
 
 // Message Boards
 async function showMessageBoards() {
   terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                        Message Boards                       ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+  terminal.writeln('╔══════════════════════════════════════════════════════════════╗');
+  terminal.writeln('║                        Message Boards                        ║');
+  terminal.writeln('╚══════════════════════════════════════════════════════════════╝');
   terminal.writeln('');
   
-  const boards = ['general', 'announcements', 'music', 'tech'];
-  terminal.writeln('\x1b[35mAvailable Boards:\x1b[0m');
+  if (currentUser && currentUser.user_level === 'guest') {
+    terminal.writeln('Guest users can only view messages, not post new ones.');
+    terminal.writeln('');
+  }
+  
+  const boards = ['general', 'random', 'music', 'computer', 'prog', 'news'];
+  terminal.writeln('╔═ Available Boards ════════════════════════════════════════════╗');
   
   if (supabase) {
     try {
@@ -386,34 +418,228 @@ async function showMessageBoards() {
           .from('messages')
           .select('*', { count: 'exact', head: true })
           .eq('board', board);
-        terminal.writeln(`\x1b[36m  [${i + 1}] ${board.toUpperCase()} (${count || 0} messages)\x1b[0m`);
+        const msgCount = count || 0;
+        const paddedBoard = `/${board}/`.padEnd(12);
+        const paddedCount = `(${msgCount} msgs)`.padEnd(10);
+        terminal.writeln(`║ [${i + 1}] ${paddedBoard} ${paddedCount} ║`);
       }
     } catch (err) {
-      terminal.writeln('\x1b[31mError loading message counts.\x1b[0m');
+      terminal.writeln('Error loading message counts.');
       boards.forEach((board, index) => {
-        terminal.writeln(`\x1b[36m  [${index + 1}] ${board.toUpperCase()} (0 messages)\x1b[0m`);
+        const paddedBoard = `/${board}/`.padEnd(12);
+        terminal.writeln(`║ [${index + 1}] ${paddedBoard} (0 msgs)     ║`);
       });
     }
   } else {
-    boards.forEach((board, index) => {
-      terminal.writeln(`\x1b[36m  [${index + 1}] ${board.toUpperCase()} (0 messages)\x1b[0m`);
-    });
+    terminal.writeln('Database connection required.');
   }
   
-  terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
+  terminal.writeln('║ [0] Back to Main Menu                ║');
+  terminal.writeln('╚═══════════════════════════════════════════════════════════╝');
   terminal.writeln('');
-  terminal.write('\x1b[32mSelect board (0-4): \x1b[0m');
+  terminal.write('Select board (0-6): ');
   
   currentMenu = 'messages';
+}
+
+// Show messages in a specific board
+async function showBoardMessages(boardName) {
+  terminal.clear();
+  const title = `${boardName.toUpperCase()} BOARD`;
+  const borderLength = Math.max(60, title.length + 4);
+  const border = '═'.repeat(borderLength - 2);
+  const padding = ' '.repeat(Math.max(0, Math.floor((borderLength - title.length - 2) / 2)));
+  
+  terminal.writeln(`\x1b[32m╔${border}╗\x1b[0m`);
+  terminal.writeln(`\x1b[32m║${padding}${title}${padding}║\x1b[0m`);
+  terminal.writeln(`\x1b[32m╚${border}╝\x1b[0m`);
+  terminal.writeln('');
+  
+  if (supabase) {
+    try {
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('board', boardName)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (error) {
+        console.error('BBS: Error loading messages:', error);
+        terminal.writeln('\x1b[31mError loading messages: ' + error.message + '\x1b[0m');
+      } else if (messages && messages.length > 0) {
+        terminal.writeln('\x1b[35mRecent Messages:\x1b[0m');
+        terminal.writeln('');
+        
+        // Get usernames for all messages
+        const userIds = [...new Set(messages.map(msg => msg.author_id))];
+        const { data: users } = await supabase
+          .from('users')
+          .select('id, username')
+          .in('id', userIds);
+        
+        const userMap = {};
+        if (users) {
+          users.forEach(user => {
+            userMap[user.id] = user.username;
+          });
+        }
+        
+        messages.forEach((msg, index) => {
+          const date = new Date(msg.created_at).toLocaleDateString();
+          const time = new Date(msg.created_at).toLocaleTimeString();
+          const username = userMap[msg.author_id] || 'Unknown';
+          const shortSubject = msg.subject.length > 35 ? msg.subject.substring(0, 35) + '...' : msg.subject;
+          const shortContent = msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content;
+          
+          terminal.writeln(`\x1b[36m[${index + 1}] \x1b[33m${shortSubject}\x1b[0m`);
+          terminal.writeln(`     \x1b[37mBy: \x1b[32m${username}\x1b[37m | ${date}\x1b[0m`);
+          terminal.writeln(`     \x1b[90m${'─'.repeat(50)}\x1b[0m`);
+          terminal.writeln(`     \x1b[37m${shortContent}\x1b[0m`);
+          terminal.writeln('');
+        });
+      } else {
+        terminal.writeln('\x1b[33mNo messages in this board yet.\x1b[0m');
+        terminal.writeln('');
+      }
+    } catch (err) {
+      terminal.writeln('\x1b[31mError connecting to database.\x1b[0m');
+    }
+  } else {
+    terminal.writeln('\x1b[31mDatabase connection required.\x1b[0m');
+    terminal.writeln('');
+  }
+  
+  terminal.writeln('\x1b[35mOptions:\x1b[0m');
+  terminal.writeln('\x1b[36m  [1-20] View message details\x1b[0m');
+  if (currentUser && currentUser.user_level !== 'guest') {
+    terminal.writeln('\x1b[36m  [N] New message\x1b[0m');
+  }
+  terminal.writeln('\x1b[36m  [0] Back to boards\x1b[0m');
+  terminal.writeln('');
+  terminal.write('\x1b[1m\x1b[4m\x1b[32mSelect option:\x1b[0m ');
+  
+  currentMenu = 'board';
+  // Store the current board name for new message creation
+  window.currentBoard = boardName;
+}
+
+// Handle board menu commands
+function handleBoardMenu(command) {
+  if (command === '0') {
+    showMessageBoards();
+  } else if (command.toLowerCase() === 'n' && currentUser && currentUser.user_level !== 'guest') {
+    // Get the current board name from the URL or context
+    const currentBoard = window.currentBoard || 'general';
+    showNewMessageForm(currentBoard);
+  } else if (command >= '1' && command <= '20') {
+    // View message details (placeholder for now)
+    terminal.writeln('\x1b[33mMessage viewing feature coming soon!\x1b[0m');
+    terminal.write('\x1b[32mPress Enter to continue: \x1b[0m');
+  } else {
+    terminal.writeln('\x1b[31mInvalid option!\x1b[0m');
+    terminal.write('\x1b[32mSelect option: \x1b[0m');
+  }
+}
+
+// New Message Form
+function showNewMessageForm(boardName = 'general') {
+  terminal.clear();
+  terminal.writeln('\x1b[1m\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
+  terminal.writeln('\x1b[1m\x1b[32m║                        \x1b[4mNEW MESSAGE\x1b[0m\x1b[1m\x1b[32m                           ║\x1b[0m');
+  terminal.writeln('\x1b[1m\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+  terminal.writeln('');
+  terminal.writeln(`\x1b[33mCreating new message in /${boardName}/ board...\x1b[0m`);
+  terminal.writeln('\x1b[36m💡 Type "cancel" or "exit" to abort\x1b[0m');
+  terminal.writeln('');
+  terminal.write('\x1b[1m\x1b[4m\x1b[32mSubject:\x1b[0m ');
+  
+  currentMenu = 'newmessage';
+  inputBuffer = '';
+  // Store the board name for later use
+  window.currentBoard = boardName;
+}
+
+// Handle new message creation
+function handleNewMessage(command) {
+  const cancelCommands = ['cancel', 'abort', 'exit', 'quit', 'stop'];
+  if (cancelCommands.includes(command.toLowerCase())) {
+    terminal.writeln('\x1b[33mMessage creation cancelled.\x1b[0m');
+    showBBSMainMenu();
+    return;
+  }
+  
+  if (!inputBuffer || inputBuffer === '') {
+    // First input is subject
+    inputBuffer = command;
+    terminal.writeln(`\x1b[33mSubject: ${command}\x1b[0m`);
+    terminal.writeln('');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mMessage content (type "END" to finish):\x1b[0m ');
+  } else if (command.toLowerCase() === 'end') {
+    // Save the message
+    const subject = inputBuffer.split('\n')[0];
+    const content = inputBuffer.split('\n').slice(1).join('\n');
+    saveNewMessage(subject, content);
+    inputBuffer = '';
+  } else {
+    // Continue collecting content
+    if (inputBuffer.includes('\n')) {
+      inputBuffer += '\n' + command;
+    } else {
+      inputBuffer = inputBuffer + '\n' + command;
+    }
+    terminal.writeln('\x1b[36m💡 Type "END" to finish, "cancel" to abort\x1b[0m');
+    terminal.write('\x1b[32m> \x1b[0m');
+  }
+}
+
+// Save new message to database
+async function saveNewMessage(subject, content) {
+  if (!supabase) {
+    terminal.writeln('\x1b[31mDatabase connection required to post messages.\x1b[0m');
+    terminal.write('\x1b[32mPress Enter to continue: \x1b[0m');
+    return;
+  }
+  
+  const boardName = window.currentBoard || 'general';
+  
+  try {
+    const { error } = await supabase
+      .from('messages')
+      .insert({
+        subject: subject,
+        content: content,
+        author_id: currentUser.id,
+        board: boardName,
+        created_at: new Date().toISOString()
+      });
+    
+    if (error) {
+      console.error('BBS: Error saving message:', error);
+      terminal.writeln('\x1b[31mError saving message: ' + error.message + '\x1b[0m');
+    } else {
+      console.log('BBS: Message saved successfully');
+      terminal.writeln('\x1b[32mMessage posted successfully to /' + boardName + '/!\x1b[0m');
+    }
+  } catch (err) {
+    terminal.writeln('\x1b[31mError connecting to database: ' + err.message + '\x1b[0m');
+  }
+  
+  terminal.write('\x1b[32mPress Enter to continue: \x1b[0m');
 }
 
 // File Downloads
 async function showFileDownloads() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                        File Downloads                       ║\x1b[0m');
+  terminal.writeln('\x1b[32m║                        File Downloads                        ║\x1b[0m');
   terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
   terminal.writeln('');
+  
+  if (currentUser && currentUser.user_level === 'guest') {
+    terminal.writeln('\x1b[33mGuest users can only view file listings, not download files.\x1b[0m');
+    terminal.writeln('');
+  }
   
   terminal.writeln('\x1b[35mAvailable Files:\x1b[0m');
   
@@ -454,7 +680,7 @@ async function showFileDownloads() {
 async function showUserDirectory() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                        User Directory                       ║\x1b[0m');
+  terminal.writeln('\x1b[32m║                        User Directory                        ║\x1b[0m');
   terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
   terminal.writeln('');
   
@@ -497,10 +723,15 @@ async function showUserDirectory() {
 // Chat Room
 async function showChatRoom() {
   terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                          Chat Room                          ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+  terminal.writeln('\x1b[1m\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
+  terminal.writeln('\x1b[1m\x1b[32m║                          \x1b[4mChat Room\x1b[0m\x1b[1m\x1b[32m                           ║\x1b[0m');
+  terminal.writeln('\x1b[1m\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
   terminal.writeln('');
+  
+  if (currentUser && currentUser.user_level === 'guest') {
+    terminal.writeln('\x1b[33mGuest users can only view chat messages, not send new ones.\x1b[0m');
+    terminal.writeln('');
+  }
   
   terminal.writeln('\x1b[35mRecent Messages:\x1b[0m');
   
@@ -508,19 +739,31 @@ async function showChatRoom() {
     try {
       const { data: messages, error } = await supabase
         .from('chat_messages')
-        .select(`
-          *,
-          users!chat_messages_user_id_fkey(username)
-        `)
+        .select('*')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15);
       
       if (error) {
         terminal.writeln('\x1b[31mError loading chat messages.\x1b[0m');
       } else if (messages && messages.length > 0) {
+        // Get usernames for chat messages
+        const userIds = [...new Set(messages.map(msg => msg.user_id))];
+        const { data: users } = await supabase
+          .from('users')
+          .select('id, username')
+          .in('id', userIds);
+        
+        const userMap = {};
+        if (users) {
+          users.forEach(user => {
+            userMap[user.id] = user.username;
+          });
+        }
+        
         messages.reverse().forEach(msg => {
-          const author = msg.users ? msg.users.username : 'Unknown';
-          terminal.writeln(`\x1b[36m  [${new Date(msg.created_at).toLocaleTimeString()}] ${author}: ${msg.content}\x1b[0m`);
+          const author = userMap[msg.user_id] || 'Unknown';
+          const time = new Date(msg.created_at).toLocaleTimeString();
+          terminal.writeln(`\x1b[37m[${time}] \x1b[33m${author}\x1b[0m: \x1b[36m${msg.content}\x1b[0m`);
         });
       } else {
         terminal.writeln('\x1b[33m  No messages yet. Be the first to chat!\x1b[0m');
@@ -537,98 +780,18 @@ async function showChatRoom() {
   terminal.writeln('\x1b[36m  Type your message and press Enter to send\x1b[0m');
   terminal.writeln('\x1b[36m  Type "exit" to return to main menu\x1b[0m');
   terminal.writeln('');
-  terminal.write('\x1b[32mEnter message: \x1b[0m');
+  terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
   
   currentMenu = 'chat';
 }
 
-// Radio Station Info
-function showRadioInfo() {
-  terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                      Radio Station Info                     ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
-  terminal.writeln('');
-  
-  terminal.writeln('\x1b[33m🎵 JTrap Family Radio Station\x1b[0m');
-  terminal.writeln('\x1b[36m  Frequency: 99.9 FM\x1b[0m');
-  terminal.writeln('\x1b[36m  Website: jtrap.radio\x1b[0m');
-  terminal.writeln('\x1b[36m  Status: Online\x1b[0m');
-  terminal.writeln('\x1b[36m  Listeners: ' + Math.floor(Math.random() * 50) + 1 + '\x1b[0m');
-  terminal.writeln('\x1b[36m  Format: Alternative/Indie Rock\x1b[0m');
-  terminal.writeln('\x1b[36m  Coverage: Worldwide via Internet\x1b[0m');
-  terminal.writeln('');
-  terminal.writeln('\x1b[35mContact Info:\x1b[0m');
-  terminal.writeln('\x1b[36m  Email: info@jtrap.radio\x1b[0m');
-  terminal.writeln('\x1b[36m  Phone: (555) JT-RADIO\x1b[0m');
-  terminal.writeln('\x1b[36m  Address: 123 Music Lane, Radio City\x1b[0m');
-  terminal.writeln('');
-  terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
-  terminal.writeln('');
-  terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
-  
-  currentMenu = 'system';
-}
 
-// System Information
-async function showSystemInfo() {
-  terminal.clear();
-  terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                      System Information                     ║\x1b[0m');
-  terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
-  terminal.writeln('');
-  
-  terminal.writeln('\x1b[35mBBS System Info:\x1b[0m');
-  terminal.writeln('\x1b[36m  Software: JTrap BBS v2.0 (Supabase)\x1b[0m');
-  terminal.writeln('\x1b[36m  Uptime: 24/7\x1b[0m');
-  terminal.writeln('\x1b[36m  Database: Supabase PostgreSQL\x1b[0m');
-  
-  if (supabase) {
-    try {
-      // Get user count
-      const { count: userCount } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get message count
-      const { count: messageCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true });
-      
-      // Get file count
-      const { count: fileCount } = await supabase
-        .from('files')
-        .select('*', { count: 'exact', head: true });
-      
-      terminal.writeln(`\x1b[36m  Total Users: ${userCount || 0}\x1b[0m`);
-      terminal.writeln(`\x1b[36m  Messages: ${messageCount || 0}\x1b[0m`);
-      terminal.writeln(`\x1b[36m  Files: ${fileCount || 0}\x1b[0m`);
-    } catch (err) {
-      terminal.writeln('\x1b[31m  Error loading statistics\x1b[0m');
-    }
-  } else {
-    terminal.writeln('\x1b[31m  Supabase not connected\x1b[0m');
-  }
-  
-  terminal.writeln('');
-  terminal.writeln('\x1b[35mServer Info:\x1b[0m');
-  terminal.writeln('\x1b[36m  OS: Linux\x1b[0m');
-  terminal.writeln('\x1b[36m  CPU: Intel i7\x1b[0m');
-  terminal.writeln('\x1b[36m  RAM: 16GB\x1b[0m');
-  terminal.writeln('\x1b[36m  Storage: 1TB SSD\x1b[0m');
-  terminal.writeln('');
-  terminal.writeln('\x1b[36m  [0] Back to Main Menu\x1b[0m');
-  terminal.writeln('');
-  terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
-  
-  currentMenu = 'system';
-}
 
 // Change Password
 function showChangePassword() {
   terminal.clear();
   terminal.writeln('\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[32m║                      Change Password                       ║\x1b[0m');
+  terminal.writeln('\x1b[32m║                      Change Password                         ║\x1b[0m');
   terminal.writeln('\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
   terminal.writeln('');
   
@@ -637,7 +800,6 @@ function showChangePassword() {
   terminal.writeln('');
   terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
   
-  currentMenu = 'system';
 }
 
 // Logout
@@ -657,12 +819,11 @@ function logout() {
     terminal.writeln('');
     terminal.writeln('\x1b[36mAvailable commands:\x1b[0m');
     terminal.writeln('  help     - Show this help message');
-    terminal.writeln('  radio    - Show radio station info');
     terminal.writeln('  time     - Show current time');
     terminal.writeln('  clear    - Clear the terminal');
     terminal.writeln('  bbs      - Access BBS system');
     terminal.writeln('');
-    terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mjtrap@radio:~$\x1b[0m ');
   }, 2000);
 }
 
@@ -670,9 +831,14 @@ function logout() {
 function handleMessageMenu(command) {
   if (command === '0') {
     showBBSMainMenu();
+  } else if (command >= '1' && command <= '6') {
+    const boards = ['general', 'random', 'music', 'computer', 'prog', 'news'];
+    const boardIndex = parseInt(command) - 1;
+    const selectedBoard = boards[boardIndex];
+    showBoardMessages(selectedBoard);
   } else {
-    terminal.writeln('\x1b[33mMessage board feature coming soon!\x1b[0m');
-    terminal.write('\x1b[32mSelect board (0-4): \x1b[0m');
+    terminal.writeln('\x1b[31mInvalid option! Please select 0-6.\x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mSelect board (0-6):\x1b[0m ');
   }
 }
 
@@ -744,36 +910,68 @@ async function handleChatMenu(command) {
         if (error) {
           terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
         } else {
-          terminal.writeln(`\x1b[36m[${new Date().toLocaleTimeString()}] ${currentUser.username}: ${command}\x1b[0m`);
+          const time = new Date().toLocaleTimeString();
+          terminal.writeln(`\x1b[37m[${time}] \x1b[33m${currentUser.username}\x1b[0m: \x1b[36m${command}\x1b[0m`);
         }
       } catch (err) {
         terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
       }
     } else {
-      terminal.writeln(`\x1b[36m[${new Date().toLocaleTimeString()}] ${currentUser.username}: ${command}\x1b[0m`);
+      const time = new Date().toLocaleTimeString();
+      terminal.writeln(`\x1b[37m[${time}] \x1b[33m${currentUser.username}\x1b[0m: \x1b[36m${command}\x1b[0m`);
     }
-    terminal.write('\x1b[32mEnter message: \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
   } else {
-    terminal.write('\x1b[32mEnter message: \x1b[0m');
+    terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
   }
 }
 
-function handleSystemMenu(command) {
-  if (command === '0') {
-    showBBSMainMenu();
-  } else {
-    terminal.writeln('\x1b[31mInvalid option.\x1b[0m');
-    terminal.write('\x1b[32mPress 0 to return: \x1b[0m');
+
+// Function to reinitialize Supabase
+function reinitSupabase() {
+  if (initSupabase()) {
+    console.log('BBS: Supabase reinitialized successfully');
+    return true;
   }
+  console.log('BBS: Supabase reinitialization failed');
+  return false;
 }
 
-// Export functions for use in main script
-window.BBS = {
-  showBBSLogin,
-  handleBBSCommand,
-  bbsMode: () => bbsMode,
-  setBBSMode: (mode) => { bbsMode = mode; }
-};
+// Export functions for use in main script (immediately)
+try {
+  window.BBS = {
+    showBBSLogin,
+    handleBBSCommand,
+    bbsMode: () => bbsMode,
+    setBBSMode: (mode) => { bbsMode = mode; },
+    reinitSupabase
+  };
+} catch (error) {
+  console.error('BBS: Error exporting functions:', error);
+}
 
-// Debug logging
-console.log('BBS Supabase system loaded:', window.BBS);
+// Initialize Supabase when BBS system loads (with delay)
+setTimeout(() => {
+  if (initSupabase()) {
+    console.log('BBS: Supabase initialized on load');
+  } else {
+    console.log('BBS: Supabase not available on load, will retry later');
+  }
+}, 100);
+
+// System ready
+console.log('🎉 BBS: System ready');
+
+} catch (error) {
+  console.error('BBS: Critical error during loading:', error);
+  console.error('BBS: Stack trace:', error.stack);
+  
+  // Create a minimal fallback BBS
+  window.BBS = {
+    showBBSLogin: () => console.log('BBS: Fallback mode - BBS not available'),
+    handleBBSCommand: () => console.log('BBS: Fallback mode - BBS not available'),
+    bbsMode: () => false,
+    setBBSMode: () => {},
+    reinitSupabase: () => false
+  };
+}

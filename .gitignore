@@ -1,0 +1,28 @@
+# Old files that should be ignored
+script_old.js
+index_old.html
+style_old.css
+
+# Debug and development files
+debug/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/

@@ -12,15 +12,36 @@ const SUPABASE_CONFIG = {
 // Initialize Supabase client
 let supabase = null;
 
-// Initialize Supabase when the page loads
-document.addEventListener('DOMContentLoaded', function() {
-  if (typeof supabase !== 'undefined') {
-    supabase = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
-    console.log('Supabase initialized successfully!');
-  } else {
-    console.error('Supabase library not loaded. Make sure to include the Supabase script in your HTML.');
+// Function to initialize Supabase
+function initSupabase() {
+  if (typeof window.supabase !== 'undefined') {
+    try {
+      supabase = window.supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+      console.log('✅ Supabase: Connected');
+      return true;
+    } catch (error) {
+      console.error('❌ Supabase: Connection failed', error);
+      return false;
+    }
   }
-});
+  return false;
+}
+
+// Try to initialize immediately
+if (!initSupabase()) {
+  // If that fails, try again with multiple attempts
+  let attempts = 0;
+  const maxAttempts = 5;
+  const retryInterval = setInterval(() => {
+    attempts++;
+    if (initSupabase()) {
+      clearInterval(retryInterval);
+    } else if (attempts >= maxAttempts) {
+      clearInterval(retryInterval);
+      console.error('❌ Supabase: Failed to load after multiple retries');
+    }
+  }, 500);
+}
 
 // Export for use in other scripts
 window.SUPABASE_CONFIG = SUPABASE_CONFIG;

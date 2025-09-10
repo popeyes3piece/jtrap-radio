@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>JTrap Family Radio</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="favicon.ico" />
   <link rel="stylesheet" href="https://unpkg.com/98.css" />
   <link rel="stylesheet" href="https://unpkg.com/xterm@5.3.0/css/xterm.css" />
   <link rel="stylesheet" href="style.css" />
-  
-  <!-- Load xterm.js early -->
-  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
-  <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
 </head>
 <body>
   <div id="top-banner" class="title-bar">
@@ -19,6 +17,11 @@
   </div>
 
   <div id="taskbar" class="taskbar">
+    <button class="taskbar-btn" onclick="WindowManager.toggleWindow('playerWindow')">🎵 Player</button>
+    <button class="taskbar-btn" onclick="WindowManager.toggleWindow('historyWindow')">📜 History</button>
+    <button class="taskbar-btn" onclick="WindowManager.toggleWindow('requestWindow')">🎤 Requests</button>
+    <button class="taskbar-btn" onclick="WindowManager.toggleWindow('media-player-window')">🎬 Videos</button>
+    <button class="taskbar-btn" onclick="WindowManager.toggleWindow('terminalWindow')">💻 Terminal</button>
     <div class="taskbar-clock" id="taskbar-clock">12:00 AM</div>
   </div>
   
@@ -38,57 +41,44 @@
 
   <div id="playerWindow" class="window" data-title="Player">
     <div class="title-bar">
-      <div class="title-bar-text">🎵 Now Playing</div>
+      <div class="title-bar-text">🎵 Loading...</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('playerWindow')" ontouchstart="minimizeWindow('playerWindow')"></button>
+        <button aria-label="Minimize" onclick="WindowManager.minimizeWindow('playerWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
     <div class="window-body custom-player">
-      <!-- Custom Windows 98 Styled Player -->
-      <div class="player-container">
-        <!-- Album Art -->
-        <div class="album-art-container">
-          <img id="custom-album-art" src="" alt="Album Art" class="album-art">
-          <div id="no-art-placeholder" class="no-art-placeholder">♪</div>
-        </div>
-        
+      <!-- Album Art -->
+      <div class="album-art-container">
+        <img id="custom-album-art" src="" alt="Album Art" class="album-art">
+        <div id="no-art-placeholder" class="no-art-placeholder">♪</div>
+      </div>
+      
+      <!-- Player Content Container (30% of space) -->
+      <div class="player-content">
         <!-- Track Info -->
         <div class="track-info">
-          <div class="track-title-container">
-            <div id="custom-track-title" class="track-title">Loading...</div>
-          </div>
+          <div id="custom-track-title" class="track-title">Loading...</div>
           <div id="custom-track-artist" class="track-artist">Unknown Artist</div>
           <div id="custom-track-album" class="track-album">Unknown Album</div>
         </div>
         
-        <!-- Progress Bar -->
-        <div class="progress-container">
-          <div class="progress-bar">
-            <div id="custom-progress-fill" class="progress-fill"></div>
+        <!-- Controls and Timeline Row -->
+        <div class="controls-timeline-row">
+          <!-- Play/Pause and Mute Buttons -->
+          <div class="control-buttons">
+            <button id="play-pause-btn" class="control-btn play-btn">▶</button>
+            <button id="volume-btn" class="control-btn volume-btn">🔊</button>
           </div>
-          <div class="time-display">
-            <span id="custom-time-elapsed" class="time-elapsed">0:00</span>
-            <span id="custom-time-remaining" class="time-remaining">0:00</span>
+          
+          <!-- Timeline using 98.css progress bar -->
+          <div class="timeline-container">
+            <progress id="custom-progress-bar" class="progress-bar" value="0" max="100"></progress>
+            <div class="time-display">
+              <span id="custom-time-elapsed" class="time-elapsed">0:00</span>
+              <span id="custom-time-remaining" class="time-remaining">0:00</span>
+            </div>
           </div>
-        </div>
-        
-        <!-- Controls -->
-        <div class="player-controls">
-          <button id="play-pause-btn" class="control-btn play-btn">▶</button>
-          <button id="volume-btn" class="control-btn volume-btn">🔊</button>
-          <div class="volume-slider-container">
-            <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="100">
-          </div>
-        </div>
-        <div class="mobile-note" style="font-size: 10px; color: #666; margin-top: 5px; text-align: center;">
-          📱 On mobile: Keep this tab open for continuous playback
-        </div>
-        
-        <!-- Station Info -->
-        <div class="station-info">
-          <div id="custom-station-name" class="station-name">JTrap Family Radio</div>
-          <div id="custom-listeners" class="listeners">Listeners: 0</div>
         </div>
       </div>
     </div>
@@ -98,21 +88,17 @@
     <div class="title-bar">
       <div class="title-bar-text">📜 History</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('historyWindow')" ontouchstart="minimizeWindow('historyWindow')"></button>
+        <button aria-label="Minimize" onclick="WindowManager.minimizeWindow('historyWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
     <div class="window-body custom-history">
-      <div class="history-section" id="history-section">
-        <div class="section-header">
-          <div class="section-title">Recent Tracks</div>
-          <div class="section-buttons">
-            <button id="refresh-history" class="refresh-btn" title="Refresh history">🔄</button>
-          </div>
-        </div>
-        <div class="history-list" id="history-list">
-          <div class="history-loading">Loading history...</div>
-        </div>
+      <div class="history-header">
+        <div class="history-title">Recent Tracks</div>
+        <button id="refresh-history" class="refresh-btn">🔀</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <div class="history-loading">Loading history...</div>
       </div>
     </div>
   </div>
@@ -121,29 +107,20 @@
     <div class="title-bar">
       <div class="title-bar-text">🎤 Requests</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('requestWindow')" ontouchstart="minimizeWindow('requestWindow')"></button>
+        <button aria-label="Minimize" onclick="WindowManager.minimizeWindow('requestWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
     <div class="window-body custom-requests">
-      <!-- Status Messages -->
-      <div id="request-status" class="request-status"></div>
-      
-      <div class="requests-container">
-        <!-- Song List -->
-        <div class="songs-section" id="songs-section">
-          <div class="section-header">
-            <div class="section-title">Request a Song</div>
-            <div class="section-buttons">
-              <button id="refresh-songs" class="refresh-btn" title="Refresh songs">🔄</button>
-            </div>
-          </div>
-          
-          <div class="songs-list" id="songs-list">
-            <div class="songs-loading">Loading songs...</div>
-          </div>
+      <div class="section-header">
+        <div class="section-title">Request a Song</div>
+        <div class="section-buttons">
+          <button id="refresh-songs" class="refresh-btn" title="Refresh songs">🔀</button>
         </div>
-        
+      </div>
+      
+      <div class="songs-list" id="songs-list">
+        <div class="songs-loading">Loading songs...</div>
       </div>
     </div>
   </div>
@@ -153,61 +130,50 @@
     <div class="title-bar">
       <div class="title-bar-text">🎬 Videos</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="minimizeWindow('media-player-window')" ontouchstart="minimizeWindow('media-player-window')"></button>
+        <button aria-label="Minimize" onclick="WindowManager.minimizeWindow('media-player-window')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
-    <div class="window-body custom-media-player">
-      <div class="media-section" id="media-section">
-        <div class="section-header">
-          <div class="section-title">Video Player</div>
-          <div class="section-buttons">
-            <button id="shuffle-videos-btn" class="refresh-btn" title="Shuffle videos">🔀</button>
+    <div class="window-body">
+      <div class="custom-media-player">
+        <div class="media-container">
+          <div class="media-display" id="media-display">
+            <div class="media-placeholder">Select a video to play</div>
           </div>
-        </div>
-        <div class="media-display" id="media-display">
-          <video id="video-player" controls style="width: 100%; height: 100%;">
-            Your browser does not support the video tag.
-          </video>
-        </div>
-        <div class="media-controls">
-          <button id="prev-video-btn" class="control-btn">⏮</button>
-          <div class="video-info">
-            <div id="current-video-name" class="video-name">No video selected</div>
+          <div class="media-controls">
+            <button id="prev-video-btn" class="control-btn">⏮</button>
+            <div class="video-info">
+              <div id="current-video-name" class="video-name">No video selected</div>
+            </div>
+            <button id="next-video-btn" class="control-btn">⏭</button>
           </div>
-          <button id="next-video-btn" class="control-btn">⏭</button>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Terminal Window -->
-  <div class="window" id="terminalWindow" data-title="Terminal" style="display: none; position: absolute; top: 100px; left: 300px; width: 520px; height: 400px; z-index: 1000;">
-    <div class="title-bar" onclick="bringToFront(document.getElementById('terminalWindow'))">
+  <div class="window" id="terminalWindow" data-title="Terminal" style="display: none; position: absolute; top: 100px; left: 300px; width: 600px; height: 400px; z-index: 1000;">
+    <div class="title-bar" onclick="WindowManager.bringToFront(document.getElementById('terminalWindow'))">
       <div class="title-bar-text">💻 Terminal</div>
       <div class="title-bar-controls">
-        <button aria-label="Minimize" onclick="event.stopPropagation(); minimizeWindow('terminalWindow');" ontouchstart="event.stopPropagation(); minimizeWindow('terminalWindow');"></button>
+        <button aria-label="Minimize" onclick="WindowManager.minimizeWindow('terminalWindow')"></button>
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
-    <div class="window-body">
+    <div class="window-body terminal-body">
       <div id="terminal"></div>
     </div>
   </div>
 
+  <script src="https://unpkg.com/xterm@5.3.0/lib/xterm.js"></script>
+  <script src="https://unpkg.com/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="bbs-supabase.js"></script>
-  <script src="bbs-local.js"></script>
-  
-  <!-- Modular JavaScript -->
-  <script src="window-manager.js"></script>
-  <script src="audio-player.js"></script>
-  <script src="requests.js"></script>
-  <script src="history.js"></script>
-  <script src="terminal.js"></script>
-  <script src="media-player.js"></script>
-  <script src="script.js"></script>
+  <script src="scripts/supabase-config.js"></script>
+  <script src="scripts/bbs-supabase.js"></script>
+  <script src="scripts/window-manager.js"></script>
+  <script src="scripts/audio-player.js"></script>
+  <script src="scripts/script.js"></script>
 </body>
 </html>
 

@@ -113,17 +113,17 @@ function showBBSMainMenu() {
   
   terminal.writeln('┌─◆ Main Menu ◆══════════════════════════════════◆─┐');
   if (currentUser && currentUser.user_level !== 'guest') {
-    terminal.writeln('│ [1] Message Boards     │ [4] Chat Room           │');
-    terminal.writeln('│ [2] File Downloads     │ [5] Change Password     │');
-    terminal.writeln('│ [3] User Directory     │ [6] Logout              │');
+    terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
+    terminal.writeln('│ [2] User Directory     │ [4] Change Password     │');
+    terminal.writeln('│                        │ [5] Logout              │');
   } else {
-    terminal.writeln('│ [1] Message Boards     │ [4] Chat Room           │');
-    terminal.writeln('│ [2] File Downloads     │ [5] Logout              │');
-    terminal.writeln('│ [3] User Directory     │ [ ] (Register for more) │');
+    terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
+    terminal.writeln('│ [2] User Directory     │ [4] Logout              │');
+    terminal.writeln('│                        │ [ ] (Register for more) │');
   }
   terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.write('Select option (1-6): ');
+  terminal.write('Select option (1-5): ');
   
   currentMenu = 'main';
 }
@@ -406,31 +406,28 @@ function handleMainMenu(command) {
       showMessageBoards();
       break;
     case '2':
-      showFileDownloads();
-      break;
-    case '3':
       showUserDirectory();
       break;
-    case '4':
+    case '3':
       showChatRoom();
       break;
-    case '5':
+    case '4':
       if (currentUser && currentUser.user_level !== 'guest') {
         showChangePassword();
       } else {
         logout();
       }
       break;
-    case '6':
+    case '5':
       if (currentUser && currentUser.user_level !== 'guest') {
         logout();
       } else {
-        terminal.writeln('\x1b[31mInvalid option! Please select 1-5.\x1b[0m');
-        terminal.write('\x1b[32mSelect option (1-5): \x1b[0m');
+        terminal.writeln('\x1b[31mInvalid option! Please select 1-4.\x1b[0m');
+        terminal.write('\x1b[32mSelect option (1-4): \x1b[0m');
       }
       break;
     default:
-      const maxOption = (currentUser && currentUser.user_level !== 'guest') ? '6' : '5';
+      const maxOption = (currentUser && currentUser.user_level !== 'guest') ? '5' : '4';
       terminal.writeln(`\x1b[31mInvalid option! Please select 1-${maxOption}.\x1b[0m`);
       terminal.write(`\x1b[32mSelect option (1-${maxOption}): \x1b[0m`);
   }
@@ -762,32 +759,322 @@ async function showUserDirectory() {
   currentMenu = 'users';
 }
 
-// Chat Room
-async function showChatRoom() {
-  terminal.clear();
-  terminal.writeln('\x1b[1m\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
-  terminal.writeln('\x1b[1m\x1b[32m║                          \x1b[4mChat Room\x1b[0m\x1b[1m\x1b[32m                           ║\x1b[0m');
-  terminal.writeln('\x1b[1m\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
-  terminal.writeln('');
+// Chat History Management
+async function cleanupOldChatMessages() {
+  if (!supabase) return;
   
-  if (currentUser && currentUser.user_level === 'guest') {
-    terminal.writeln('\x1b[33mGuest users can only view chat messages, not send new ones.\x1b[0m');
-    terminal.writeln('');
+  try {
+    // Get total count of messages
+    const { count } = await supabase
+      .from('chat_messages')
+      .select('*', { count: 'exact', head: true });
+    
+    // If we have more than 100 messages, delete the oldest ones
+    if (count && count > 100) {
+      const messagesToDelete = count - 100;
+      
+      // Get the oldest messages to delete
+      const { data: oldMessages } = await supabase
+        .from('chat_messages')
+        .select('id')
+        .order('created_at', { ascending: true })
+        .limit(messagesToDelete);
+      
+      if (oldMessages && oldMessages.length > 0) {
+        const idsToDelete = oldMessages.map(msg => msg.id);
+        
+        // Delete the old messages
+        const { error } = await supabase
+          .from('chat_messages')
+          .delete()
+          .in('id', idsToDelete);
+        
+        if (error) {
+          console.warn('Failed to cleanup old chat messages:', error);
+        } else {
+          console.log(`Cleaned up ${idsToDelete.length} old chat messages`);
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Error during chat cleanup:', err);
+  }
+}
+
+
+// BBS Chat Room - Custom Chat Interface
+async function showChatRoom() {
+  // Hide the terminal and show custom chat interface
+  const terminalContainer = document.getElementById('terminal');
+  const chatContainer = document.getElementById('bbs-chat-container');
+  
+  if (terminalContainer) {
+    terminalContainer.style.display = 'none';
   }
   
-  terminal.writeln('\x1b[35mRecent Messages:\x1b[0m');
+  // Create chat container if it doesn't exist
+  if (!chatContainer) {
+    createChatContainer();
+  } else {
+    chatContainer.style.display = 'block';
+  }
   
+  // Set up BBS Chat Client with user's nickname
+  if (window.bbsChatClient && currentUser) {
+    window.bbsChatClient.setNickname(currentUser.username);
+  }
+  
+  // Load recent chat messages
+  await loadRecentChatMessages();
+  
+  // Show help messages
+  addChatMessage('system', 'BBS Chat Commands:');
+  addChatMessage('system', '/who - Show who\'s online');
+  addChatMessage('system', '/clear - Clear the chat screen');
+  addChatMessage('system', '/time - Show current time');
+  addChatMessage('system', '/help - Show this help');
+  addChatMessage('system', '/exit - Return to BBS menu');
+  addChatMessage('system', 'Just type to chat with other users!');
+  
+  // Focus the chat input
+  const chatInput = document.getElementById('bbs-chat-input');
+  if (chatInput) {
+    chatInput.focus();
+  }
+  
+  currentMenu = 'chat';
+}
+
+// Create custom chat container
+function createChatContainer() {
+  const terminalWindow = document.getElementById('terminalWindow');
+  if (!terminalWindow) return;
+  
+  const chatContainer = document.createElement('div');
+  chatContainer.id = 'bbs-chat-container';
+  chatContainer.style.cssText = `
+    position: absolute;
+    top: 28px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #2a2a2a;
+    color: #f8f8f2;
+    font-family: 'Tahoma', 'Arial', sans-serif;
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  `;
+  
+  // Chat header
+  const chatHeader = document.createElement('div');
+  chatHeader.style.cssText = `
+    background: #3c3c3c;
+    border: 2px outset #75715e;
+    padding: 8px;
+    text-align: center;
+    font-weight: bold;
+    color: #f8f8f2;
+    font-family: 'Tahoma', 'Arial', sans-serif;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+  `;
+  chatHeader.textContent = 'BBS Chat Room';
+  chatContainer.appendChild(chatHeader);
+  
+  // Chat messages area
+  const chatMessages = document.createElement('div');
+  chatMessages.id = 'bbs-chat-messages';
+  chatMessages.style.cssText = `
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    background: #2a2a2a;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+  `;
+  chatContainer.appendChild(chatMessages);
+  
+  // Chat input area
+  const chatInputArea = document.createElement('div');
+  chatInputArea.style.cssText = `
+    background: #3c3c3c;
+    padding: 8px;
+    border-top: 1px inset #75715e;
+    display: flex;
+    align-items: center;
+  `;
+  
+  const chatPrompt = document.createElement('span');
+  chatPrompt.style.cssText = `
+    color: #f8f8f2;
+    margin-right: 8px;
+    font-weight: bold;
+    font-family: 'Tahoma', 'Arial', sans-serif;
+    font-size: 11px;
+  `;
+  chatPrompt.textContent = `<${currentUser ? currentUser.username : 'Guest'}>`;
+  chatInputArea.appendChild(chatPrompt);
+  
+  const chatInput = document.createElement('input');
+  chatInput.id = 'bbs-chat-input';
+  chatInput.type = 'text';
+  chatInput.style.cssText = `
+    flex: 1;
+    background: #2a2a2a;
+    border: 1px inset #75715e;
+    color: #f8f8f2;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    padding: 4px 8px;
+    outline: none;
+  `;
+  chatInput.placeholder = 'Type your message...';
+  
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const message = chatInput.value.trim();
+      if (message) {
+        handleChatMessage(message);
+        chatInput.value = '';
+      }
+    }
+  });
+  
+  chatInputArea.appendChild(chatInput);
+  chatContainer.appendChild(chatInputArea);
+  
+  terminalWindow.appendChild(chatContainer);
+}
+
+// Handle chat messages
+async function handleChatMessage(message) {
+  if (message.toLowerCase() === '/exit' || message.toLowerCase() === 'exit') {
+    exitChatRoom();
+    return;
+  }
+  
+  if (message.toLowerCase() === '/help') {
+    addChatMessage('system', 'BBS Chat Commands:');
+    addChatMessage('system', '/who - Show who\'s online');
+    addChatMessage('system', '/clear - Clear the chat screen');
+    addChatMessage('system', '/time - Show current time');
+    addChatMessage('system', '/help - Show this help');
+    addChatMessage('system', '/exit - Return to BBS menu');
+    addChatMessage('system', 'Just type to chat with other users!');
+    return;
+  }
+  
+  if (message.toLowerCase() === '/who') {
+    addChatMessage('system', 'Users in BBS Chat:');
+    addChatMessage('system', `${currentUser ? currentUser.username : 'Guest'} (you)`);
+    addChatMessage('system', '(Real-time user presence coming soon!)');
+    return;
+  }
+  
+  if (message.toLowerCase() === '/clear') {
+    const chatMessages = document.getElementById('bbs-chat-messages');
+    if (chatMessages) {
+      chatMessages.innerHTML = '';
+    }
+    addChatMessage('system', 'Chat screen cleared.');
+    return;
+  }
+  
+  if (message.toLowerCase() === '/time') {
+    const now = new Date();
+    addChatMessage('system', `Current time: ${now.toLocaleString()}`);
+    return;
+  }
+  
+  // Send chat message
+  if (currentUser && currentUser.user_level === 'guest') {
+    addChatMessage('system', 'Guest users cannot send messages.');
+    return;
+  }
+  
+  if (supabase) {
+    try {
+      const { error } = await supabase
+        .from('chat_messages')
+        .insert([{
+          user_id: currentUser.id,
+          content: message,
+          created_at: new Date().toISOString()
+        }]);
+      
+      if (error) {
+        addChatMessage('error', 'Error sending message.');
+      } else {
+        // Show the message immediately
+        addChatMessage('user', message, currentUser.username);
+      }
+    } catch (err) {
+      addChatMessage('error', 'Error sending message.');
+    }
+  } else {
+    addChatMessage('system', 'Chat not available. Message not sent.');
+  }
+}
+
+// Add message to chat display
+function addChatMessage(type, message, username = null, customTime = null) {
+  const chatMessages = document.getElementById('bbs-chat-messages');
+  if (!chatMessages) return;
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.style.cssText = `
+    margin-bottom: 2px;
+    word-wrap: break-word;
+  `;
+  
+  const time = customTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  
+  if (type === 'system') {
+    messageDiv.innerHTML = `<span style="color: #83a598;">*** ${message}</span>`;
+  } else if (type === 'error') {
+    messageDiv.innerHTML = `<span style="color: #fb4934;">*** ${message}</span>`;
+  } else if (type === 'user') {
+    messageDiv.innerHTML = `<span style="color: #928374;">${time}</span> <span style="color: #b8bb26;">&lt;${username}&gt;</span> <span style="color: #ebdbb2;">${message}</span>`;
+  }
+  
+  chatMessages.appendChild(messageDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Exit chat room
+function exitChatRoom() {
+  const terminalContainer = document.getElementById('terminal');
+  const chatContainer = document.getElementById('bbs-chat-container');
+  
+  if (terminalContainer) {
+    terminalContainer.style.display = 'block';
+  }
+  
+  if (chatContainer) {
+    chatContainer.style.display = 'none';
+  }
+  
+  currentMenu = 'main';
+  showBBSMainMenu();
+}
+
+// Load recent chat messages for seamless BBS experience
+async function loadRecentChatMessages() {
   if (supabase) {
     try {
       const { data: messages, error } = await supabase
         .from('chat_messages')
         .select('*')
         .order('created_at', { ascending: false })
-        .limit(15);
+        .limit(10);
       
       if (error) {
-        terminal.writeln('\x1b[31mError loading chat messages.\x1b[0m');
-      } else if (messages && messages.length > 0) {
+        addChatMessage('error', 'Error loading chat history.');
+        return;
+      }
+      
+      if (messages && messages.length > 0) {
         // Get usernames for chat messages
         const userIds = [...new Set(messages.map(msg => msg.user_id))];
         const { data: users } = await supabase
@@ -802,32 +1089,26 @@ async function showChatRoom() {
           });
         }
         
+        // Display recent messages
+        addChatMessage('system', 'Recent Chat Activity:');
         messages.reverse().forEach(msg => {
           const author = userMap[msg.user_id] || 'Unknown';
-          const time = new Date(msg.created_at).toLocaleTimeString();
-          terminal.writeln(`\x1b[37m[${time}] \x1b[33m${author}\x1b[0m: \x1b[36m${msg.content}\x1b[0m`);
+          const time = new Date(msg.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          addChatMessage('user', msg.content, author, time);
         });
+        addChatMessage('system', 'Chat is now active! Start typing to chat with other users...');
       } else {
-        terminal.writeln('\x1b[33m  No messages yet. Be the first to chat!\x1b[0m');
+        addChatMessage('system', 'No recent chat activity. Be the first to chat!');
+        addChatMessage('system', 'Chat is now active! Start typing to chat with other users...');
       }
     } catch (err) {
-      terminal.writeln('\x1b[31mError loading chat messages.\x1b[0m');
+      addChatMessage('error', 'Error loading chat history.');
     }
   } else {
-    terminal.writeln('\x1b[33m  Supabase not available. No chat messages to display.\x1b[0m');
+    addChatMessage('system', 'Chat history not available.');
+    addChatMessage('system', 'Chat is now active! Start typing to chat with other users...');
   }
-  
-  terminal.writeln('');
-  terminal.writeln('\x1b[35mCommands:\x1b[0m');
-  terminal.writeln('\x1b[36m  Type your message and press Enter to send\x1b[0m');
-  terminal.writeln('\x1b[36m  Type "exit" to return to main menu\x1b[0m');
-  terminal.writeln('');
-  terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
-  
-  currentMenu = 'chat';
 }
-
-
 
 // Change Password
 function showChangePassword() {
@@ -936,10 +1217,36 @@ function handleUserMenu(command) {
 }
 
 async function handleChatMenu(command) {
-  if (command.toLowerCase() === 'exit') {
+  if (command.toLowerCase() === '/exit' || command.toLowerCase() === 'exit') {
+    terminal.writeln('\x1b[36m*** Leaving BBS Chat Room...\x1b[0m');
     showBBSMainMenu();
+  } else if (command.toLowerCase() === '/help') {
+    terminal.writeln('\x1b[36m*** BBS Chat Commands:\x1b[0m');
+    terminal.writeln('\x1b[36m***   /who     - Show who\'s online\x1b[0m');
+    terminal.writeln('\x1b[36m***   /clear   - Clear the chat screen\x1b[0m');
+    terminal.writeln('\x1b[36m***   /time    - Show current time\x1b[0m');
+    terminal.writeln('\x1b[36m***   /help    - Show this help\x1b[0m');
+    terminal.writeln('\x1b[36m***   /exit    - Return to BBS menu\x1b[0m');
+    terminal.writeln('\x1b[36m***   Just type to chat with other users!\x1b[0m');
+  } else if (command.toLowerCase() === '/who') {
+    terminal.writeln('\x1b[36m*** Users in BBS Chat:\x1b[0m');
+    terminal.writeln(`\x1b[32m***   ${currentUser ? currentUser.username : 'Guest'} (you)\x1b[0m`);
+    terminal.writeln('\x1b[33m***   (Real-time user presence coming soon!)\x1b[0m');
+  } else if (command.toLowerCase() === '/clear') {
+    terminal.clear();
+    terminal.writeln('\x1b[1m\x1b[32m╔══════════════════════════════════════════════════════════════╗\x1b[0m');
+    terminal.writeln('\x1b[1m\x1b[32m║                        \x1b[4mBBS Chat Room\x1b[0m\x1b[1m\x1b[32m                        ║\x1b[0m');
+    terminal.writeln('\x1b[1m\x1b[32m╚══════════════════════════════════════════════════════════════╝\x1b[0m');
+    terminal.writeln('');
+    terminal.writeln('\x1b[36m*** Chat screen cleared.\x1b[0m');
+  } else if (command.toLowerCase() === '/time') {
+    const now = new Date();
+    terminal.writeln(`\x1b[36m*** Current time: ${now.toLocaleString()}\x1b[0m`);
   } else if (command.trim() !== '') {
-    if (supabase) {
+    // Send chat message
+    if (currentUser && currentUser.user_level === 'guest') {
+      terminal.writeln('\x1b[33m*** Guest users cannot send messages.\x1b[0m');
+    } else if (supabase) {
       try {
         const { error } = await supabase
           .from('chat_messages')
@@ -950,22 +1257,22 @@ async function handleChatMenu(command) {
           }]);
         
         if (error) {
-          terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
+          terminal.writeln('\x1b[31m*** Error sending message.\x1b[0m');
         } else {
-          const time = new Date().toLocaleTimeString();
-          terminal.writeln(`\x1b[37m[${time}] \x1b[33m${currentUser.username}\x1b[0m: \x1b[36m${command}\x1b[0m`);
+          // Show the message immediately in BBS style - use write instead of writeln for chat flow
+          const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+          terminal.write(`\x1b[90m${time}\x1b[0m \x1b[32m<${currentUser.username}>\x1b[0m ${command}\r\n`);
         }
       } catch (err) {
-        terminal.writeln('\x1b[31mFailed to send message.\x1b[0m');
+        terminal.writeln('\x1b[31m*** Error sending message.\x1b[0m');
       }
     } else {
-      const time = new Date().toLocaleTimeString();
-      terminal.writeln(`\x1b[37m[${time}] \x1b[33m${currentUser.username}\x1b[0m: \x1b[36m${command}\x1b[0m`);
+      terminal.writeln('\x1b[33m*** Chat not available. Message not sent.\x1b[0m');
     }
-    terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
-  } else {
-    terminal.write('\x1b[1m\x1b[4m\x1b[32mEnter message:\x1b[0m ');
   }
+  
+  // Always show the prompt after any command
+  terminal.write(`\x1b[32m<${currentUser ? currentUser.username : 'Guest'}>\x1b[0m `);
 }
 
 

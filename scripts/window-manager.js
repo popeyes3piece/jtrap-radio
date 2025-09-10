@@ -195,6 +195,55 @@ const WindowManager = {
       }
     });
 
+    // Touch events for mobile dragging
+    title.addEventListener('touchstart', (e) => {
+      if (e.target.tagName === 'BUTTON') return; // Don't drag when clicking buttons
+      
+      isDragging = true;
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startLeft = parseInt(win.style.left) || 0;
+      startTop = parseInt(win.style.top) || 0;
+      
+      this.bringToFront(win);
+      e.preventDefault();
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isDragging) return;
+      
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+      
+      let newLeft = startLeft + deltaX;
+      let newTop = startTop + deltaY;
+      
+      // Constrain to viewport
+      const constrained = this.constrainWindowPosition(win, newLeft, newTop);
+      newLeft = constrained.x;
+      newTop = constrained.y;
+      
+      win.style.left = newLeft + 'px';
+      win.style.top = newTop + 'px';
+      
+      e.preventDefault();
+    });
+
+    document.addEventListener('touchend', () => {
+      if (isDragging) {
+        isDragging = false;
+        // Save position
+        const id = win.id;
+        const rect = win.getBoundingClientRect();
+        localStorage.setItem(`win-${id}`, JSON.stringify({
+          top: rect.top + 'px',
+          left: rect.left + 'px'
+        }));
+      }
+    });
+
     // Initialize window resizing
     this.initializeWindowResizing(win);
   },
@@ -252,6 +301,67 @@ const WindowManager = {
     });
 
     document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        // Save size
+        const id = win.id;
+        localStorage.setItem(`win-${id}-size`, JSON.stringify({
+          width: win.style.width,
+          height: win.style.height
+        }));
+      }
+    });
+
+    // Touch events for mobile resizing
+    resizeHandle.addEventListener('touchstart', (e) => {
+      isResizing = true;
+      const touch = e.touches[0];
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startWidth = parseInt(win.style.width) || win.offsetWidth;
+      startHeight = parseInt(win.style.height) || win.offsetHeight;
+      startLeft = parseInt(win.style.left) || 0;
+      startTop = parseInt(win.style.top) || 0;
+      
+      this.bringToFront(win);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!isResizing) return;
+      
+      const touch = e.touches[0];
+      const deltaX = touch.clientX - startX;
+      const deltaY = touch.clientY - startY;
+      
+      // Set different minimum dimensions based on window type
+      let minWidth = 200;
+      let minHeight = 100;
+      
+      if (win.id === 'playerWindow') {
+        minWidth = 200;
+        minHeight = 250;
+      }
+      
+      let newWidth = Math.max(minWidth, startWidth + deltaX);
+      let newHeight = Math.max(minHeight, startHeight + deltaY);
+      
+      win.style.width = newWidth + 'px';
+      win.style.height = newHeight + 'px';
+      
+      // Update window-body height dynamically
+      const windowBody = win.querySelector('.window-body');
+      if (windowBody) {
+        const finalHeight = newHeight;
+        // Account for title bar (28px) and resize handle area (25px)
+        windowBody.style.height = (finalHeight - 28 - 25) + 'px';
+      }
+      
+      e.preventDefault();
+    });
+
+    document.addEventListener('touchend', () => {
       if (isResizing) {
         isResizing = false;
         // Save size

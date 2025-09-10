@@ -1148,6 +1148,18 @@ function initializeTerminal() {
       // Set up command handling
       let currentLine = '';
       terminal.onData(data => {
+        // Check if we're in password mode first
+        if (window.BBS && window.BBS.isPasswordMode && window.BBS.isPasswordMode()) {
+          const result = window.BBS.handlePasswordInput(data);
+          if (result !== null) {
+            // Password entered, process it
+            if (window.BBS.bbsMode()) {
+              window.BBS.handleBBSCommand(result);
+            }
+          }
+          return;
+        }
+        
         if (data === '\r') { // Enter key
           terminal.writeln('');
           if (window.BBS && window.BBS.bbsMode()) {

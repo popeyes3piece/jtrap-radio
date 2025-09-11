@@ -117,18 +117,14 @@ function showBBSMainMenu() {
     terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
     terminal.writeln('│ [2] User Directory     │ [4] Change Password     │');
     terminal.writeln('│                        │ [5] Logout              │');
-    terminal.writeln('│ [admin] First Admin Setup                      │');
-    terminal.writeln('│ [refresh] Refresh User Data                    │');
   } else {
     terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
     terminal.writeln('│ [2] User Directory     │ [4] Logout              │');
     terminal.writeln('│                        │ [ ] (Register for more) │');
-    terminal.writeln('│ [admin] First Admin Setup                      │');
-    terminal.writeln('│ [refresh] Refresh User Data                    │');
   }
   terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.write('Select option (1-5, admin, or refresh): ');
+  terminal.write('Select option (1-5): ');
   
   currentMenu = 'main';
 }
@@ -422,27 +418,12 @@ function handleMainMenu(command) {
         logout();
       }
       break;
-    case 'admin':
-      if (currentUser && currentUser.user_level === 'admin') {
-        terminal.writeln('\x1b[33mAdmin promotion command available to admins only.\x1b[0m');
-        terminal.writeln('\x1b[36mUse: promote <username> to promote a user to admin.\x1b[0m');
-      } else if (currentUser && currentUser.username) {
-        // Check if any admins exist first
-        checkAndPromoteToFirstAdmin(currentUser.username);
-      } else {
-        terminal.writeln('\x1b[31mYou must be logged in to use admin commands.\x1b[0m');
-      }
-      break;
-    case 'refresh':
-      // Refresh user data from database
-      refreshUserData();
-      break;
     case '5':
       if (currentUser && currentUser.user_level !== 'guest') {
         logout();
       } else {
-        terminal.writeln('\x1b[31mInvalid option! Please select 1-4.\x1b[0m');
-        terminal.write('\x1b[32mSelect option (1-4): \x1b[0m');
+        terminal.writeln('\x1b[31mInvalid option! Please select 1-5.\x1b[0m');
+        terminal.write('\x1b[32mSelect option (1-5): \x1b[0m');
       }
       break;
     default:
@@ -864,6 +845,10 @@ async function showChatRoom() {
   addChatMessage('system', '/time - Show current time');
   addChatMessage('system', '/help - Show this help');
   addChatMessage('system', '/exit - Return to BBS menu');
+  if (currentUser && currentUser.user_level === 'admin') {
+    addChatMessage('system', 'admin - Admin commands (admin only)');
+    addChatMessage('system', 'refresh - Refresh user data (admin only)');
+  }
   addChatMessage('system', 'Just type to chat with other users!');
   console.log('Help messages added');
   
@@ -1252,6 +1237,10 @@ async function handleChatMessage(message) {
     addChatMessage('system', '/time - Show current time');
     addChatMessage('system', '/help - Show this help');
     addChatMessage('system', '/exit - Return to BBS menu');
+    if (currentUser && currentUser.user_level === 'admin') {
+      addChatMessage('system', 'admin - Admin commands (admin only)');
+      addChatMessage('system', 'refresh - Refresh user data (admin only)');
+    }
     addChatMessage('system', 'Just type to chat with other users!');
     return;
   }

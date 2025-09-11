@@ -103,6 +103,11 @@ const AudioPlayer = {
     const playPauseBtn = document.getElementById('play-pause-btn');
     if (playPauseBtn) {
       playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+      // Add touch support for mobile
+      playPauseBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        this.togglePlayPause();
+      });
     }
     
     // Volume controls
@@ -119,6 +124,11 @@ const AudioPlayer = {
     const volumeBtn = document.getElementById('volume-btn');
     if (volumeBtn) {
       volumeBtn.addEventListener('click', () => this.toggleMute());
+      // Add touch support for mobile
+      volumeBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        this.toggleMute();
+      });
     }
   },
 

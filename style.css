@@ -363,7 +363,7 @@ iframe {
   transition: width 0.3s ease;
 }
 
-/* Custom Windows 98 Player Styles - Two container layout */
+/* Custom Windows 98 Player Styles - Traditional media player layout */
 .window-body.custom-player {
   padding: 8px !important;
   background: #3c3c3c;
@@ -372,25 +372,26 @@ iframe {
   font-size: 12px;
   height: 100%;
   box-sizing: border-box;
-  overflow: hidden; /* Prevent overflow on small windows */
+  overflow: hidden;
   min-width: 150px;
-  min-height: 200px;
+  min-height: 120px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  justify-content: space-between; /* Album art at top, controls at bottom */
 }
 
 /* Player window specific minimum dimensions */
 #playerWindow {
   min-width: 150px;
-  min-height: 200px;
+  min-height: 120px; /* Much smaller minimum */
   max-width: 90vw;
   max-height: 90vh;
 }
 
-/* Album Art Container - Simple responsive square */
+/* Album Art Container - Takes most space, stays square */
 .album-art-container {
   width: 100%;
+  max-width: 100%; /* Allow it to grow wider */
   aspect-ratio: 1;
   border: 2px inset #75715e;
   background: #000;
@@ -402,12 +403,11 @@ iframe {
   overflow: hidden;
   box-sizing: border-box;
   flex-shrink: 1;
-  flex-grow: 7;
-  order: 1;
-  min-height: 100px;
+  flex-grow: 1; /* Take up most of the available space */
+  min-height: 40px;
 }
 
-/* Controls and Timeline Row - Compact for smaller space */
+/* Controls and Timeline Row - Fixed size */
 .controls-timeline-row {
   display: flex;
   align-items: center;
@@ -415,9 +415,8 @@ iframe {
   background: #1a1a1a;
   border: 1px inset #75715e;
   padding: 6px;
-  height: 35px;
+  height: 40px;
   box-sizing: border-box;
-  margin: 0;
   width: 100%;
   flex-shrink: 0;
   flex-grow: 0;
@@ -470,32 +469,29 @@ iframe {
   box-sizing: border-box;
 }
 
-/* Container for everything else - Gets 30% of the space */
+/* Player Content - Fixed bottom area */
 .player-content {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-shrink: 1;
-  flex-grow: 3;
-  order: 2;
-  min-height: 80px;
-  max-height: 120px;
+  flex-shrink: 0; /* Don't shrink */
+  flex-grow: 0; /* Don't grow - fixed size */
+  box-sizing: border-box;
 }
 
 .track-info {
   text-align: center;
   color: #f8f8f2;
   width: 100%;
-  margin: 0;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 2px;
-  flex-shrink: 1;
+  flex-shrink: 0;
   flex-grow: 0;
-  padding: 2px 0;
-  height: 50px;
+  padding: 4px 0;
+  min-height: 40px;
 }
 
 /* Simple title styling */
@@ -1183,7 +1179,8 @@ iframe {
   }
   
   .album-art-container {
-    max-width: 150px; /* Smaller on mobile */
+    max-width: 200px; /* Reasonable max size for mobile */
+    /* Keep aspect-ratio: 1 to maintain square shape */
   }
   
   .track-info {
@@ -1201,6 +1198,30 @@ iframe {
     padding: 4px 8px;
     min-height: 32px;
     min-width: 80px;
+  }
+  
+  /* Walking cat positioning for mobile */
+  .walking-cat {
+    bottom: 45px; /* Above the taller mobile taskbar */
+  }
+  
+  /* Player window adjustments for small screens */
+  .window-body.custom-player {
+    padding: 6px !important; /* Less padding on mobile */
+    gap: 6px; /* Smaller gap */
+  }
+  
+  .album-art-container {
+    max-width: 120px; /* Smaller on mobile */
+    min-height: 50px; /* Even smaller minimum */
+  }
+  
+  .player-content {
+    padding-bottom: 6px; /* Less padding on mobile */
+  }
+  
+  .controls-timeline-row {
+    padding: 4px 4px 8px 4px; /* Less padding on mobile but still some bottom */
   }
   
   /* Better title bar for mobile dragging */

@@ -894,8 +894,8 @@ function createChatContainer() {
     left: 0;
     right: 0;
     bottom: 0;
-    background: #1a1a1a;
-    color: #f8f8f2;
+    background: #282828;
+    color: #ebdbb2;
     font-family: 'Courier New', monospace;
     font-size: 12px;
     display: flex;
@@ -919,8 +919,8 @@ function createChatContainer() {
     flex: 1;
     overflow-y: auto;
     padding: 8px;
-    background: #000;
-    border: 1px inset #75715e;
+    background: #3c3836;
+    border: 1px inset #665c54;
     margin-bottom: 8px;
     font-family: 'Courier New', monospace;
     font-size: 11px;
@@ -934,14 +934,14 @@ function createChatContainer() {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: #2a2a2a;
-    border: 2px inset #75715e;
+    background: #3c3836;
+    border: 2px inset #665c54;
     padding: 4px;
   `;
   
   const chatPrompt = document.createElement('span');
   chatPrompt.style.cssText = `
-    color: #a6e22e;
+    color: #b8bb26;
     font-weight: bold;
   `;
   chatPrompt.textContent = '> ';
@@ -955,7 +955,7 @@ function createChatContainer() {
     background: transparent;
     border: none;
     outline: none;
-    color: #f8f8f2;
+    color: #ebdbb2;
     font-family: 'Courier New', monospace;
     font-size: 11px;
   `;
@@ -983,11 +983,11 @@ function createChatContainer() {
   const usersSidebar = document.createElement('div');
   usersSidebar.id = 'bbs-users-sidebar';
   usersSidebar.style.cssText = `
-    width: 200px;
-    min-width: 200px;
-    max-width: 200px;
-    background: #2a2a2a;
-    border: 1px inset #75715e;
+    width: 150px;
+    min-width: 150px;
+    max-width: 150px;
+    background: #3c3836;
+    border: 1px inset #665c54;
     display: flex;
     flex-direction: column;
     font-family: 'Courier New', monospace;
@@ -998,12 +998,16 @@ function createChatContainer() {
   // Users header
   const usersHeader = document.createElement('div');
   usersHeader.style.cssText = `
-    background: #1a1a1a;
-    border-bottom: 1px solid #75715e;
+    background: #504945;
+    border-bottom: 1px solid #665c54;
+    border-top: 1px solid #504945;
+    border-left: 1px solid #504945;
+    border-right: 1px solid #504945;
     padding: 4px 8px;
     font-weight: bold;
-    color: #a6e22e;
+    color: #ebdbb2;
     text-align: center;
+    font-size: 10px;
   `;
   usersHeader.textContent = 'ONLINE USERS';
 
@@ -1020,11 +1024,14 @@ function createChatContainer() {
   const userCount = document.createElement('div');
   userCount.id = 'bbs-user-count';
   userCount.style.cssText = `
-    background: #1a1a1a;
-    border-top: 1px solid #75715e;
+    background: #282828;
+    border-top: 1px solid #665c54;
+    border-bottom: 1px solid #282828;
+    border-left: 1px solid #282828;
+    border-right: 1px solid #282828;
     padding: 4px 8px;
-    font-size: 10px;
-    color: #888;
+    font-size: 9px;
+    color: #ebdbb2;
     text-align: center;
   `;
   userCount.textContent = '0 users online';
@@ -1080,7 +1087,7 @@ function addUserToSidebar(username) {
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #a6e22e;
+    background: #b8bb26;
     flex-shrink: 0;
   `;
 
@@ -1089,7 +1096,7 @@ function addUserToSidebar(username) {
   const isAdmin = currentUser && currentUser.username === username && currentUser.user_level === 'admin';
   usernameSpan.textContent = isAdmin ? `@${username}` : username;
   usernameSpan.style.cssText = `
-    color: ${isAdmin ? '#ff6b6b' : '#a6e22e'};
+    color: ${isAdmin ? '#fb4934' : '#b8bb26'};
     font-weight: bold;
   `;
 

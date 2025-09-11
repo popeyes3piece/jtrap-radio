@@ -138,6 +138,11 @@ const WindowManager = {
       if (win.style.display === 'none') {
         win.style.display = 'block';
         this.bringToFront(win);
+        
+        // Special handling for media player window - reshuffle videos when opened
+        if (windowId === 'media-player-window' && typeof reshuffleVideos === 'function') {
+          reshuffleVideos();
+        }
       } else {
         win.style.display = 'none';
       }

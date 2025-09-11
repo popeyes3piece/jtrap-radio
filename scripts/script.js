@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   // Only run this once DOM is ready
   // Audio player initialization moved to audio-player.js module
   initializeCustomHistory();
   initializeCustomRequests();
-  initializeMediaPlayer();
+  await initializeMediaPlayer();
   initializeTerminal();
   initializeClock();
   initializeWalkingCat();
@@ -35,6 +35,24 @@ function formatTime(seconds) {
   const m = Math.floor(seconds / 60);
   const s = Math.floor(seconds % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
+}
+
+// Shuffle array function
+function shuffleArray(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+}
+
+// Reshuffle videos when media player window is opened
+function reshuffleVideos() {
+  if (mediaFiles && mediaFiles.length > 0) {
+    shuffleArray(mediaFiles);
+    // Restart from the first video in the new shuffled order
+    playVideo(0);
+    console.log('Videos reshuffled!');
+  }
 }
 
 // Time display functionality removed as requested
@@ -397,7 +415,7 @@ let currentMediaElement = null;
 let mediaFiles = [];
 let currentVideoIndex = 0;
 
-function initializeMediaPlayer() {
+async function initializeMediaPlayer() {
   const mediaDisplay = document.getElementById('media-display');
   const prevBtn = document.getElementById('prev-video-btn');
   const nextBtn = document.getElementById('next-video-btn');
@@ -406,7 +424,7 @@ function initializeMediaPlayer() {
   if (!mediaDisplay || !prevBtn || !nextBtn) return;
   
   // Load available media files
-  loadMediaFiles();
+  await loadMediaFiles();
   
   // Set up event listeners
   prevBtn.addEventListener('click', () => {
@@ -432,20 +450,108 @@ function initializeMediaPlayer() {
   }
 }
 
-function loadMediaFiles() {
-  // List of available media files (you can add more)
+async function loadMediaFiles() {
+  // Load all known video files from the media directory
+  const knownVideos = [
+    'Ear Man.webm',
+    'Jumpscare.webm', 
+    'Keanu Wants Pizza.webm',
+    'Sometimes.webm',
+    'Trump Works At Home Depot.webm',
+    'Cool_Rus_song.webm',
+    'bassackwards.webm',
+    '1657894439242.webm',
+    '1667603304819993.webm',
+    '1669413907811558.webm',
+    '1669754222493390.webm',
+    '1670533486936134.webm',
+    '1670652996372991.webm',
+    '1671115846812811.webm',
+    '1671284361682843.webm',
+    '1671968314151320.webm',
+    '1672200709639097.webm',
+    '1672298305050075.webm',
+    '1677606720568062.webm',
+    '1687215412211774.webm',
+    '1689744919165944.webm',
+    '1712683220935964.webm',
+    '1730373456378377.webm',
+    '1733349554834284.webm',
+    '1742026593117869.webm',
+    '1743568021915515.mp4',
+    '1745772417099947.webm',
+    '1747196732397943.webm',
+    '1747208500093058.webm',
+    '1748721344522817.webm',
+    '1751039720101799 (1).webm',
+    '1756889407556558.webm',
+    '1757014385000743.webm',
+    '1757071272206056.webm',
+    '1757128034444584.webm'
+  ];
+  
+  mediaFiles = [];
+  
+  // Check which videos actually exist by trying to load them
+  for (const filename of knownVideos) {
+    try {
+      const response = await fetch(`media/${filename}`, { method: 'HEAD' });
+      if (response.ok) {
+        const displayName = getDisplayName(filename);
+        mediaFiles.push({
+          name: displayName,
+          path: `media/${filename}`,
+          type: 'video'
+        });
+      }
+    } catch (error) {
+      // Skip files that don't exist or can't be accessed
+      console.warn(`Could not access ${filename}:`, error);
+    }
+  }
+  
+  // Shuffle the videos for random order
+  shuffleArray(mediaFiles);
+  
+  console.log(`Loaded ${mediaFiles.length} video files`);
+  
+  // If no videos found, use fallback
+  if (mediaFiles.length === 0) {
+    loadFallbackMediaFiles();
+  }
+}
+
+function isVideoFile(filename) {
+  const videoExtensions = ['.webm', '.mp4', '.ogg', '.avi', '.mov'];
+  return videoExtensions.some(ext => filename.toLowerCase().endsWith(ext));
+}
+
+function getDisplayName(filename) {
+  // Remove file extension
+  let name = filename.replace(/\.[^/.]+$/, '');
+  
+  // Convert underscores and hyphens to spaces
+  name = name.replace(/[_-]/g, ' ');
+  
+  // Handle timestamp-based names
+  if (/^\d{13,16}$/.test(name)) {
+    return `Video ${name}`;
+  }
+  
+  // Capitalize first letter of each word
+  return name.split(' ').map(word => 
+    word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+  ).join(' ');
+}
+
+function loadFallbackMediaFiles() {
+  // Fallback list for when dynamic loading fails
   mediaFiles = [
     { name: 'Ear Man', path: 'media/Ear Man.webm', type: 'video' },
     { name: 'Jumpscare', path: 'media/Jumpscare.webm', type: 'video' },
     { name: 'Keanu Wants Pizza', path: 'media/Keanu Wants Pizza.webm', type: 'video' },
     { name: 'Sometimes', path: 'media/Sometimes.webm', type: 'video' },
-    { name: 'Video 1', path: 'media/1667603304819993.webm', type: 'video' },
-    { name: 'Video 2', path: 'media/1677606720568062.webm', type: 'video' },
-    { name: 'Video 3', path: 'media/1687215412211774.webm', type: 'video' },
-    { name: 'Video 4', path: 'media/1689744919165944.webm', type: 'video' },
-    { name: 'Video 5', path: 'media/1745772417099947.webm', type: 'video' },
-    { name: 'Video 6', path: 'media/1747208500093058.webm', type: 'video' },
-    { name: 'Video 7', path: 'media/1751039720101799 (1).webm', type: 'video' }
+    { name: 'Trump Works At Home Depot', path: 'media/Trump Works At Home Depot.webm', type: 'video' }
   ];
 }
 
@@ -473,31 +579,11 @@ function playVideo(index) {
   videoElement.style.maxHeight = '100%';
   videoElement.style.objectFit = 'contain';
   
-  // Handle aspect ratio when video loads
+  // Handle aspect ratio when video loads - DISABLED AUTO-RESIZE
+  // Let the window stay at its current size and let CSS flexbox handle the layout
   videoElement.addEventListener('loadedmetadata', () => {
     const aspectRatio = videoElement.videoWidth / videoElement.videoHeight;
-    const mediaWindow = document.getElementById('media-player-window');
-    
-    if (mediaWindow && aspectRatio > 0) {
-      // Calculate new dimensions based on aspect ratio
-      const maxWidth = 600;
-      const maxHeight = 400;
-      
-      let newWidth = maxWidth;
-      let newHeight = maxWidth / aspectRatio;
-      
-      // If height exceeds max, scale down
-      if (newHeight > maxHeight) {
-        newHeight = maxHeight;
-        newWidth = maxHeight * aspectRatio;
-      }
-      
-      // Update window size
-      mediaWindow.style.width = `${Math.round(newWidth)}px`;
-      mediaWindow.style.height = `${Math.round(newHeight + 50)}px`; // +50 for title bar
-      
-      console.log(`Video aspect ratio: ${aspectRatio.toFixed(2)}, Window resized to: ${Math.round(newWidth)}x${Math.round(newHeight)}`);
-    }
+    console.log(`Video aspect ratio: ${aspectRatio.toFixed(2)}, Window size unchanged - letting CSS flexbox handle layout`);
   });
   
   // Set up event listener for when video ends

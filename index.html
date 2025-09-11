@@ -134,20 +134,21 @@
       </div>
     </div>
     <div class="resize-handle resize-se"></div>
-    <div class="window-body">
-      <div class="custom-media-player">
-        <div class="media-container">
-          <div class="media-display" id="media-display">
-            <div class="media-placeholder">Select a video to play</div>
-          </div>
-          <div class="media-controls">
-            <button id="prev-video-btn" class="control-btn">⏮</button>
-            <div class="video-info">
-              <div id="current-video-name" class="video-name">No video selected</div>
-            </div>
-            <button id="next-video-btn" class="control-btn">⏭</button>
-          </div>
+    <div class="window-body custom-video-player">
+      <!-- Video Display - Takes most space -->
+      <div class="video-display-container">
+        <div class="video-display" id="media-display">
+          <div class="video-placeholder">Select a video to play</div>
         </div>
+      </div>
+      
+      <!-- Video Controls - Fixed at bottom -->
+      <div class="video-controls">
+        <button id="prev-video-btn" class="control-btn">⏮</button>
+        <div class="video-info">
+          <div id="current-video-name" class="video-name">No video selected</div>
+        </div>
+        <button id="next-video-btn" class="control-btn">⏭</button>
       </div>
     </div>
   </div>

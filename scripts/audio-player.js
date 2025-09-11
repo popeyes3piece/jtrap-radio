@@ -301,18 +301,21 @@ const AudioPlayer = {
     const songTitleEl = document.getElementById('custom-track-title');
     if (songTitleEl) {
       songTitleEl.textContent = song.title || 'Unknown Title';
+      this.addSmartScrolling(songTitleEl);
     }
     
     // Update song artist
     const songArtistEl = document.getElementById('custom-track-artist');
     if (songArtistEl) {
       songArtistEl.textContent = song.artist || 'Unknown Artist';
+      this.addSmartScrolling(songArtistEl);
     }
     
     // Update song album
     const songAlbumEl = document.getElementById('custom-track-album');
     if (songAlbumEl) {
       songAlbumEl.textContent = song.album || 'Unknown Album';
+      this.addSmartScrolling(songAlbumEl);
     }
     
     // Update window title with station name
@@ -456,6 +459,29 @@ const AudioPlayer = {
       this.nowPlayingSSE.close();
       this.nowPlayingSSE = null;
     }
+  },
+
+  // Add smart scrolling to text elements that overflow
+  addSmartScrolling(element) {
+    // Remove any existing animation
+    element.style.animation = 'none';
+    element.style.transform = 'translateX(0)';
+    
+    // Check if text overflows after a short delay to ensure DOM is updated
+    setTimeout(() => {
+      const isOverflowing = element.scrollWidth > element.clientWidth;
+      
+      if (isOverflowing) {
+        // Add scrolling animation only if text overflows
+        element.style.animation = 'scroll-text 6s linear infinite';
+        element.style.textOverflow = 'unset';
+      } else {
+        // Use ellipsis if text fits
+        element.style.animation = 'none';
+        element.style.textOverflow = 'ellipsis';
+        element.style.transform = 'translateX(0)';
+      }
+    }, 100);
   }
 };
 

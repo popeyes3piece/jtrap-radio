@@ -59,6 +59,7 @@ function handlePasswordInput(char) {
 // BBS Login Screen
 function showBBSLogin() {
   terminal.clear();
+  passwordMode = false; // Reset password mode
   terminal.writeln('╔══════════════════════════════════════════════════════╗');
   terminal.writeln('║                JTRAP FAMILY RADIO                    ║');
   terminal.writeln('╠══════════════════════════════════════════════════════╣');
@@ -116,14 +117,18 @@ function showBBSMainMenu() {
     terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
     terminal.writeln('│ [2] User Directory     │ [4] Change Password     │');
     terminal.writeln('│                        │ [5] Logout              │');
+    terminal.writeln('│ [admin] First Admin Setup                      │');
+    terminal.writeln('│ [refresh] Refresh User Data                    │');
   } else {
     terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
     terminal.writeln('│ [2] User Directory     │ [4] Logout              │');
     terminal.writeln('│                        │ [ ] (Register for more) │');
+    terminal.writeln('│ [admin] First Admin Setup                      │');
+    terminal.writeln('│ [refresh] Refresh User Data                    │');
   }
   terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.write('Select option (1-5): ');
+  terminal.write('Select option (1-5, admin, or refresh): ');
   
   currentMenu = 'main';
 }
@@ -150,7 +155,7 @@ function handleBBSCommand(command) {
       handleUserMenu(command);
       break;
     case 'chat':
-      handleChatMenu(command);
+      showChatRoom();
       break;
     case 'board':
       handleBoardMenu(command);
@@ -167,6 +172,7 @@ function handleBBSCommand(command) {
 async function handleLogin(command) {
   if (command.toLowerCase() === 'exit') {
     bbsMode = false;
+    passwordMode = false; // Reset password mode
     terminal.clear();
     terminal.writeln('\x1b[32mWelcome to JTrap Family Radio Terminal!\x1b[0m');
     terminal.writeln('\x1b[33mType "help" for available commands.\x1b[0m');
@@ -212,8 +218,8 @@ async function handleLogin(command) {
         currentUser = data;
         passwordAttempts = 0; // Reset password attempts for new user
         terminal.writeln(`\x1b[32mFound user: ${data.username}\x1b[0m`);
-        passwordMode = true;
-        maskedPassword = '';
+        passwordMode = true; // Set password mode for BBS login
+        inputBuffer = ''; // Clear input buffer
         terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       } catch (err) {
         console.error('Database error:', err);
@@ -242,14 +248,15 @@ async function handleLogin(command) {
       }
       
       currentUser.last_login = new Date();
+      passwordMode = false; // Reset password mode
       terminal.writeln('\x1b[32mLogin successful!\x1b[0m');
       setTimeout(() => showBBSMainMenu(), 1000);
     } else {
       passwordAttempts++;
       if (passwordAttempts < 3) {
         terminal.writeln(`\x1b[31mInvalid password. Try again (${passwordAttempts}/3 attempts).\x1b[0m`);
-        passwordMode = true;
-        maskedPassword = '';
+        passwordMode = true; // Set password mode for retry
+        inputBuffer = ''; // Clear input buffer
         terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       } else {
         terminal.writeln('\x1b[31mToo many failed attempts. Returning to login.\x1b[0m');
@@ -282,6 +289,7 @@ async function handleRegistration(command) {
   if (lowerCommand === 'exit' || lowerCommand === 'back' || lowerCommand === 'cancel') {
     terminal.writeln('\x1b[33mReturning to login screen...\x1b[0m');
     currentUser = null; // Reset registration state
+    passwordMode = false; // Reset password mode
     showBBSLogin();
     return;
   }
@@ -324,15 +332,11 @@ async function handleRegistration(command) {
     
     currentUser = { username: command.toLowerCase(), step: 'password' };
     terminal.writeln(`\x1b[32mUsername: ${command}\x1b[0m`);
-    passwordMode = true;
-    maskedPassword = '';
     terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
   } else if (currentUser.step === 'password') {
     // Password input
     if (command.trim() === '') {
       terminal.writeln('\x1b[31mPassword cannot be empty. Try again or type "exit", "back", or "cancel" to return.\x1b[0m');
-      passwordMode = true;
-      maskedPassword = '';
       terminal.write('\x1b[1m\x1b[4m\x1b[32mPassword:\x1b[0m ');
       return;
     }
@@ -417,6 +421,21 @@ function handleMainMenu(command) {
       } else {
         logout();
       }
+      break;
+    case 'admin':
+      if (currentUser && currentUser.user_level === 'admin') {
+        terminal.writeln('\x1b[33mAdmin promotion command available to admins only.\x1b[0m');
+        terminal.writeln('\x1b[36mUse: promote <username> to promote a user to admin.\x1b[0m');
+      } else if (currentUser && currentUser.username) {
+        // Check if any admins exist first
+        checkAndPromoteToFirstAdmin(currentUser.username);
+      } else {
+        terminal.writeln('\x1b[31mYou must be logged in to use admin commands.\x1b[0m');
+      }
+      break;
+    case 'refresh':
+      // Refresh user data from database
+      refreshUserData();
       break;
     case '5':
       if (currentUser && currentUser.user_level !== 'guest') {
@@ -804,18 +823,27 @@ async function cleanupOldChatMessages() {
 
 // BBS Chat Room - Custom Chat Interface
 async function showChatRoom() {
+  console.log('showChatRoom called');
+  
   // Hide the terminal and show custom chat interface
   const terminalContainer = document.getElementById('terminal');
   const chatContainer = document.getElementById('bbs-chat-container');
   
+  console.log('Terminal container:', terminalContainer);
+  console.log('Existing chat container:', chatContainer);
+  
   if (terminalContainer) {
     terminalContainer.style.display = 'none';
+    console.log('Terminal hidden');
   }
   
   // Create chat container if it doesn't exist
   if (!chatContainer) {
+    console.log('Creating new chat container...');
     createChatContainer();
+    console.log('Chat container created');
   } else {
+    console.log('Showing existing chat container');
     chatContainer.style.display = 'block';
   }
   
@@ -825,9 +853,11 @@ async function showChatRoom() {
   }
   
   // Load recent chat messages
+  console.log('Loading recent chat messages...');
   await loadRecentChatMessages();
   
   // Show help messages
+  console.log('Adding help messages...');
   addChatMessage('system', 'BBS Chat Commands:');
   addChatMessage('system', '/who - Show who\'s online');
   addChatMessage('system', '/clear - Clear the chat screen');
@@ -835,6 +865,7 @@ async function showChatRoom() {
   addChatMessage('system', '/help - Show this help');
   addChatMessage('system', '/exit - Return to BBS menu');
   addChatMessage('system', 'Just type to chat with other users!');
+  console.log('Help messages added');
   
   // Focus the chat input
   const chatInput = document.getElementById('bbs-chat-input');
@@ -845,10 +876,15 @@ async function showChatRoom() {
   currentMenu = 'chat';
 }
 
-// Create custom chat container
+// Create custom chat container with users sidebar
 function createChatContainer() {
+  console.log('createChatContainer called');
   const terminalWindow = document.getElementById('terminalWindow');
-  if (!terminalWindow) return;
+  console.log('Terminal window found:', terminalWindow);
+  if (!terminalWindow) {
+    console.error('Terminal window not found!');
+    return;
+  }
   
   const chatContainer = document.createElement('div');
   chatContainer.id = 'bbs-chat-container';
@@ -858,29 +894,23 @@ function createChatContainer() {
     left: 0;
     right: 0;
     bottom: 0;
-    background: #2a2a2a;
+    background: #1a1a1a;
     color: #f8f8f2;
-    font-family: 'Tahoma', 'Arial', sans-serif;
+    font-family: 'Courier New', monospace;
     font-size: 12px;
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  `;
-  
-  // Chat header
-  const chatHeader = document.createElement('div');
-  chatHeader.style.cssText = `
-    background: #3c3c3c;
-    border: 2px outset #75715e;
     padding: 8px;
-    text-align: center;
-    font-weight: bold;
-    color: #f8f8f2;
-    font-family: 'Tahoma', 'Arial', sans-serif;
-    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.8);
+    box-sizing: border-box;
   `;
-  chatHeader.textContent = 'BBS Chat Room';
-  chatContainer.appendChild(chatHeader);
+
+  // Create main chat area (messages + input)
+  const chatMainArea = document.createElement('div');
+  chatMainArea.style.cssText = `
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-right: 8px;
+  `;
   
   // Chat messages area
   const chatMessages = document.createElement('div');
@@ -889,31 +919,32 @@ function createChatContainer() {
     flex: 1;
     overflow-y: auto;
     padding: 8px;
-    background: #2a2a2a;
+    background: #000;
+    border: 1px inset #75715e;
+    margin-bottom: 8px;
     font-family: 'Courier New', monospace;
     font-size: 11px;
+    line-height: 1.4;
   `;
-  chatContainer.appendChild(chatMessages);
+  chatMainArea.appendChild(chatMessages);
   
   // Chat input area
   const chatInputArea = document.createElement('div');
   chatInputArea.style.cssText = `
-    background: #3c3c3c;
-    padding: 8px;
-    border-top: 1px inset #75715e;
     display: flex;
     align-items: center;
+    gap: 8px;
+    background: #2a2a2a;
+    border: 2px inset #75715e;
+    padding: 4px;
   `;
   
   const chatPrompt = document.createElement('span');
   chatPrompt.style.cssText = `
-    color: #f8f8f2;
-    margin-right: 8px;
+    color: #a6e22e;
     font-weight: bold;
-    font-family: 'Tahoma', 'Arial', sans-serif;
-    font-size: 11px;
   `;
-  chatPrompt.textContent = `<${currentUser ? currentUser.username : 'Guest'}>`;
+  chatPrompt.textContent = '> ';
   chatInputArea.appendChild(chatPrompt);
   
   const chatInput = document.createElement('input');
@@ -921,13 +952,12 @@ function createChatContainer() {
   chatInput.type = 'text';
   chatInput.style.cssText = `
     flex: 1;
-    background: #2a2a2a;
-    border: 1px inset #75715e;
+    background: transparent;
+    border: none;
+    outline: none;
     color: #f8f8f2;
     font-family: 'Courier New', monospace;
     font-size: 11px;
-    padding: 4px 8px;
-    outline: none;
   `;
   chatInput.placeholder = 'Type your message...';
   
@@ -935,16 +965,270 @@ function createChatContainer() {
     if (e.key === 'Enter') {
       const message = chatInput.value.trim();
       if (message) {
-        handleChatMessage(message);
+        // Check for BBS commands first
+        if (message === 'admin' || message === 'exit' || message === 'logout') {
+          handleBBSCommand(message);
+        } else {
+          handleChatMessage(message);
+        }
         chatInput.value = '';
       }
     }
   });
   
   chatInputArea.appendChild(chatInput);
-  chatContainer.appendChild(chatInputArea);
+  chatMainArea.appendChild(chatInputArea);
+
+  // Create users sidebar
+  const usersSidebar = document.createElement('div');
+  usersSidebar.id = 'bbs-users-sidebar';
+  usersSidebar.style.cssText = `
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    background: #2a2a2a;
+    border: 1px inset #75715e;
+    display: flex;
+    flex-direction: column;
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    flex-shrink: 0;
+  `;
+
+  // Users header
+  const usersHeader = document.createElement('div');
+  usersHeader.style.cssText = `
+    background: #1a1a1a;
+    border-bottom: 1px solid #75715e;
+    padding: 4px 8px;
+    font-weight: bold;
+    color: #a6e22e;
+    text-align: center;
+  `;
+  usersHeader.textContent = 'ONLINE USERS';
+
+  // Users list
+  const usersList = document.createElement('div');
+  usersList.id = 'bbs-users-list';
+  usersList.style.cssText = `
+    flex: 1;
+    padding: 4px;
+    overflow-y: auto;
+  `;
+
+  // User count
+  const userCount = document.createElement('div');
+  userCount.id = 'bbs-user-count';
+  userCount.style.cssText = `
+    background: #1a1a1a;
+    border-top: 1px solid #75715e;
+    padding: 4px 8px;
+    font-size: 10px;
+    color: #888;
+    text-align: center;
+  `;
+  userCount.textContent = '0 users online';
+
+  // Assemble users sidebar
+  usersSidebar.appendChild(usersHeader);
+  usersSidebar.appendChild(usersList);
+  usersSidebar.appendChild(userCount);
+
+  // Assemble the main UI
+  chatContainer.appendChild(chatMainArea);
+  chatContainer.appendChild(usersSidebar);
   
   terminalWindow.appendChild(chatContainer);
+  console.log('Chat container added to terminal window');
+  
+  // Refresh user data to get latest admin status
+  if (currentUser) {
+    refreshUserData();
+  }
+  
+  // Add current user to the users list
+  addUserToSidebar(currentUser ? currentUser.username : 'Guest');
+  console.log('Current user added to sidebar:', currentUser ? currentUser.username : 'Guest');
+}
+
+// Add user to the sidebar
+function addUserToSidebar(username) {
+  const usersList = document.getElementById('bbs-users-list');
+  const userCount = document.getElementById('bbs-user-count');
+  
+  if (!usersList || !userCount) return;
+
+  // Check if user already exists
+  const existingUser = usersList.querySelector(`[data-username="${username}"]`);
+  if (existingUser) return;
+
+  const userDiv = document.createElement('div');
+  userDiv.setAttribute('data-username', username);
+  userDiv.style.cssText = `
+    padding: 2px 4px;
+    margin: 1px 0;
+    border-radius: 2px;
+    font-size: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  `;
+
+  // Add status indicator
+  const statusDot = document.createElement('span');
+  statusDot.style.cssText = `
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #a6e22e;
+    flex-shrink: 0;
+  `;
+
+  // Add username with admin badge if applicable
+  const usernameSpan = document.createElement('span');
+  const isAdmin = currentUser && currentUser.username === username && currentUser.user_level === 'admin';
+  usernameSpan.textContent = isAdmin ? `@${username}` : username;
+  usernameSpan.style.cssText = `
+    color: ${isAdmin ? '#ff6b6b' : '#a6e22e'};
+    font-weight: bold;
+  `;
+
+  userDiv.appendChild(statusDot);
+  userDiv.appendChild(usernameSpan);
+  usersList.appendChild(userDiv);
+
+  // Update user count
+  const userCountNum = usersList.children.length;
+  userCount.textContent = `${userCountNum} user${userCountNum !== 1 ? 's' : ''} online`;
+}
+
+// Check if any admins exist and promote if none do
+async function checkAndPromoteToFirstAdmin(username) {
+  if (!supabase) {
+    terminal.writeln('\x1b[31mDatabase connection required for admin promotion.\x1b[0m');
+    return;
+  }
+
+  try {
+    // Check if any admins exist
+    const { data: admins, error: checkError } = await supabase
+      .from('users')
+      .select('username')
+      .eq('user_level', 'admin');
+
+    if (checkError) {
+      console.error('Admin check error:', checkError);
+      terminal.writeln('\x1b[31mFailed to check for existing admins: ' + checkError.message + '\x1b[0m');
+      return;
+    }
+
+    if (admins && admins.length > 0) {
+      terminal.writeln('\x1b[31mAdmin users already exist. Only existing admins can promote users.\x1b[0m');
+      terminal.writeln('\x1b[33mContact an admin to be promoted: ' + admins.map(a => a.username).join(', ') + '\x1b[0m');
+      return;
+    }
+
+    // No admins exist, allow self-promotion
+    terminal.writeln('\x1b[33mNo admin users found. Promoting you to first admin...\x1b[0m');
+    await promoteToAdmin(username);
+  } catch (err) {
+    console.error('Admin check exception:', err);
+    terminal.writeln('\x1b[31mError checking for admins: ' + err.message + '\x1b[0m');
+  }
+}
+
+// Refresh user data from database
+async function refreshUserData() {
+  if (!supabase || !currentUser) {
+    terminal.writeln('\x1b[31mNo user logged in to refresh.\x1b[0m');
+    return;
+  }
+
+  try {
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('*')
+      .eq('username', currentUser.username)
+      .single();
+
+    if (error) {
+      console.error('User refresh error:', error);
+      terminal.writeln('\x1b[31mFailed to refresh user data: ' + error.message + '\x1b[0m');
+    } else if (userData) {
+      // Update current user object
+      Object.assign(currentUser, userData);
+      terminal.writeln('\x1b[32mUser data refreshed successfully!\x1b[0m');
+      terminal.writeln('\x1b[33mUser level: ' + currentUser.user_level + '\x1b[0m');
+      
+      // Update admin badge in chat if visible
+      updateAdminBadgeInChat();
+    }
+  } catch (err) {
+    console.error('User refresh exception:', err);
+    terminal.writeln('\x1b[31mError refreshing user data: ' + err.message + '\x1b[0m');
+  }
+}
+
+// Update admin badge in chat
+function updateAdminBadgeInChat() {
+  const usersList = document.getElementById('bbs-users-list');
+  if (!usersList || !currentUser) return;
+
+  // Find current user in the sidebar
+  const userDiv = usersList.querySelector(`[data-username="${currentUser.username}"]`);
+  if (userDiv) {
+    // Remove existing admin badge
+    const existingBadge = userDiv.querySelector('.admin-badge');
+    if (existingBadge) {
+      existingBadge.remove();
+    }
+
+    // Add admin badge if user is admin
+    if (currentUser.user_level === 'admin') {
+      const adminBadge = document.createElement('span');
+      adminBadge.className = 'admin-badge';
+      adminBadge.textContent = '@';
+      adminBadge.style.cssText = `
+        color: #f92672;
+        font-weight: bold;
+        font-size: 8px;
+        margin-right: 4px;
+      `;
+      userDiv.insertBefore(adminBadge, userDiv.firstChild);
+    }
+  }
+}
+
+// Promote user to admin
+async function promoteToAdmin(username) {
+  if (!supabase) {
+    terminal.writeln('\x1b[31mDatabase connection required for admin promotion.\x1b[0m');
+    return;
+  }
+
+  try {
+    // Update user level to admin
+    const { error } = await supabase
+      .from('users')
+      .update({ user_level: 'admin' })
+      .eq('username', username);
+
+    if (error) {
+      console.error('Admin promotion error:', error);
+      terminal.writeln('\x1b[31mFailed to promote to admin: ' + error.message + '\x1b[0m');
+    } else {
+      terminal.writeln('\x1b[32mSuccessfully promoted ' + username + ' to admin!\x1b[0m');
+      terminal.writeln('\x1b[33mPlease log out and log back in to activate admin privileges.\x1b[0m');
+      
+      // Update current user object
+      if (currentUser && currentUser.username === username) {
+        currentUser.user_level = 'admin';
+      }
+    }
+  } catch (err) {
+    console.error('Admin promotion exception:', err);
+    terminal.writeln('\x1b[31mError promoting to admin: ' + err.message + '\x1b[0m');
+  }
 }
 
 // Handle chat messages
@@ -1128,6 +1412,7 @@ function showChangePassword() {
 // Logout
 function logout() {
   terminal.clear();
+  passwordMode = false; // Reset password mode
   terminal.writeln('\x1b[32mThank you for using JTrap Family Radio BBS!\x1b[0m');
   terminal.writeln('\x1b[33mGoodbye, ' + currentUser.username + '!\x1b[0m');
   terminal.writeln('');
@@ -1288,15 +1573,35 @@ function reinitSupabase() {
 
 // Export functions for use in main script (immediately)
 try {
+  console.log('Initializing BBS system...');
   window.BBS = {
     showBBSLogin,
     handleBBSCommand,
     bbsMode: () => bbsMode,
     setBBSMode: (mode) => { bbsMode = mode; },
     reinitSupabase,
-    isPasswordMode,
-    handlePasswordInput
+    isPasswordMode: () => isPasswordMode(),
+    handlePasswordInput: (data) => {
+      if (data === '\r') {
+        const password = inputBuffer;
+        inputBuffer = '';
+        passwordMode = false;
+        return password;
+      } else if (data === '\u007f' || data === '\b') {
+        if (inputBuffer.length > 0) {
+          inputBuffer = inputBuffer.slice(0, -1);
+          terminal.write('\b \b');
+        }
+        return null;
+      } else if (data.length === 1 && data >= ' ') {
+        inputBuffer += data;
+        terminal.write('*');
+        return null;
+      }
+      return null;
+    }
   };
+  console.log('BBS system initialized successfully');
 } catch (error) {
   console.error('BBS: Error exporting functions:', error);
 }

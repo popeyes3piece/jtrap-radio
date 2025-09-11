@@ -89,12 +89,24 @@ const AudioPlayer = {
     // Add periodic check to keep audio playing
     setInterval(() => {
       if (this.isPlaying && this.audioElement.paused) {
-        // Silent resume - no logging to avoid audio skipping
-        this.audioElement.play().catch(e => {
-          // Silent error handling
-        });
+        // Check if audio is in a recoverable state
+        if (this.audioElement.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+          this.audioElement.play().catch(e => {
+            // If play fails, reset the playing state
+            if (e.name !== 'NotAllowedError') {
+              console.warn('Audio resume failed, resetting state:', e);
+              this.isPlaying = false;
+              this.updatePlayPauseButton();
+            }
+          });
+        } else {
+          // Audio is not ready, reset state
+          console.warn('Audio not ready, resetting playing state');
+          this.isPlaying = false;
+          this.updatePlayPauseButton();
+        }
       }
-    }, 1000);
+    }, 2000); // Check every 2 seconds instead of 1
   },
 
   // Set up control event listeners
@@ -113,11 +125,11 @@ const AudioPlayer = {
     // Volume controls
     const volumeSlider = document.getElementById('volume-slider');
     if (volumeSlider) {
-      volumeSlider.addEventListener('input', (e) => {
-        this.currentVolume = e.target.value;
-        if (this.audioElement) {
-          this.audioElement.volume = this.currentVolume / 100;
-        }
+      volumeSlider.addEventListener('input', (e) => this.setVolume(e.target.value));
+      // Add touch support for mobile
+      volumeSlider.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        this.setVolume(e.target.value);
       });
     }
     
@@ -148,10 +160,24 @@ const AudioPlayer = {
       this.audioElement.pause();
       // isPlaying will be set to false by the pause event listener
     } else {
-      this.audioElement.play().catch(e => {
-        console.error('Play failed:', e);
-      });
-      // isPlaying will be set to true by the play event listener
+      // Check if audio is ready before attempting to play
+      if (this.audioElement.readyState >= 2) {
+        this.audioElement.play().catch(e => {
+          console.error('Play failed:', e);
+          // Reset state if play fails
+          this.isPlaying = false;
+          this.updatePlayPauseButton();
+        });
+      } else {
+        console.warn('Audio not ready to play, current state:', this.audioElement.readyState);
+        // Try to load the audio first
+        this.audioElement.load();
+        this.audioElement.play().catch(e => {
+          console.error('Play failed after load:', e);
+          this.isPlaying = false;
+          this.updatePlayPauseButton();
+        });
+      }
     }
   },
 
@@ -162,10 +188,36 @@ const AudioPlayer = {
     const volumeBtn = document.getElementById('volume-btn');
     if (this.audioElement.volume > 0) {
       this.audioElement.volume = 0;
+      this.isMuted = true;
       if (volumeBtn) volumeBtn.textContent = '🔇';
     } else {
       this.audioElement.volume = this.currentVolume / 100;
+      this.isMuted = false;
       if (volumeBtn) volumeBtn.textContent = '🔊';
+    }
+  },
+
+  // Set volume from slider
+  setVolume(value) {
+    if (!this.audioElement) return;
+    
+    this.currentVolume = parseInt(value);
+    this.isMuted = false;
+    this.audioElement.volume = this.currentVolume / 100;
+    this.updateVolumeButton();
+  },
+
+  // Update volume button display
+  updateVolumeButton() {
+    const volumeBtn = document.getElementById('volume-btn');
+    if (volumeBtn) {
+      if (this.isMuted || this.audioElement.volume === 0) {
+        volumeBtn.textContent = '🔇';
+      } else if (this.currentVolume >= 50) {
+        volumeBtn.textContent = '🔊';
+      } else {
+        volumeBtn.textContent = '🔉';
+      }
     }
   },
 
@@ -240,7 +292,16 @@ const AudioPlayer = {
     this.loadNowPlayingData();
     
     // Set up regular updates for now playing data (every 30 seconds to reduce load)
+    // This serves as a fallback if SSE fails
     setInterval(() => this.loadNowPlayingData(), 30000);
+    
+    // Also set up a more frequent fallback check (every 10 seconds) if SSE is not working
+    setInterval(() => {
+      if (!this.nowPlayingSSE || this.nowPlayingSSE.readyState === EventSource.CLOSED) {
+        console.log('SSE not connected, using fallback polling');
+        this.loadNowPlayingData();
+      }
+    }, 10000);
     
     // Set up real-time progress bar updates (every 1 second, only when playing)
     setInterval(() => this.updateProgressBar(), 1000);
@@ -270,12 +331,16 @@ const AudioPlayer = {
     };
     
     this.nowPlayingSSE.onerror = function(e) {
-      // Attempt to reconnect after 5 seconds
+      console.warn('SSE connection error, attempting to reconnect...');
+      // Close existing connection
+      if (AudioPlayer.nowPlayingSSE) {
+        AudioPlayer.nowPlayingSSE.close();
+        AudioPlayer.nowPlayingSSE = null;
+      }
+      // Attempt to reconnect after 3 seconds
       setTimeout(() => {
-        if (AudioPlayer.nowPlayingSSE.readyState === EventSource.CLOSED) {
-          AudioPlayer.initializeNowPlayingSSE();
-        }
-      }, 5000);
+        AudioPlayer.initializeNowPlayingSSE();
+      }, 3000);
     };
   },
 

@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateHistory();
   setInterval(updateHistory, 30000); // Update history every 30 seconds
   
+  // Chat Manager initialization removed - using BBS built-in chat
+  
   // Now Playing functionality moved to audio-player.js module
 
   // Set default window visibility - only player window open by default
@@ -571,7 +573,7 @@ function playVideo(index) {
   // Create video element
   const videoElement = document.createElement('video');
   videoElement.controls = true;
-  videoElement.autoplay = true;
+  videoElement.autoplay = false; // Don't auto-play to avoid interrupting audio
   videoElement.loop = true;
   videoElement.preload = 'metadata';
   videoElement.src = video.path;
@@ -1231,17 +1233,20 @@ function initializeTerminal() {
       terminal.writeln('  bbs      - Access BBS system');
       terminal.writeln('');
       
+      // Reset password mode when terminal starts
+      if (window.BBS) {
+        window.BBS.setBBSMode(false);
+      }
+      
       // Set up command handling
       let currentLine = '';
       terminal.onData(data => {
-        // Check if we're in password mode first
-        if (window.BBS && window.BBS.isPasswordMode && window.BBS.isPasswordMode()) {
+        // Check if we're in password mode first (only when in BBS mode)
+        if (window.BBS && window.BBS.bbsMode() && window.BBS.isPasswordMode && window.BBS.isPasswordMode()) {
           const result = window.BBS.handlePasswordInput(data);
           if (result !== null) {
             // Password entered, process it
-            if (window.BBS.bbsMode()) {
-              window.BBS.handleBBSCommand(result);
-            }
+            window.BBS.handleBBSCommand(result);
           }
           return;
         }

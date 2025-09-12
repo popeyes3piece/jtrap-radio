@@ -94,7 +94,7 @@ function showBBSMainMenu() {
   terminal.clear();
   terminal.writeln('┌─◆══════════════════════════════════════════════◆─┐');
   terminal.writeln('│                                                  │');
-  terminal.writeln('│        🎵 JTrap Family Radio BBS 🎵               │');
+  terminal.writeln('│        🎵 JTrap Family Radio BBS 🎵                │');
   terminal.writeln('│                                                  │');
   terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
@@ -114,17 +114,21 @@ function showBBSMainMenu() {
   
   terminal.writeln('┌─◆ Main Menu ◆══════════════════════════════════◆─┐');
   if (currentUser && currentUser.user_level !== 'guest') {
-    terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
-    terminal.writeln('│ [2] User Directory     │ [4] Change Password     │');
-    terminal.writeln('│                        │ [5] Logout              │');
+    terminal.writeln('│ messageboard - View message boards             │');
+    terminal.writeln('│ users        - View user directory             │');
+    terminal.writeln('│ chat         - Enter chat room                 │');
+    terminal.writeln('│ password     - Change password                 │');
+    terminal.writeln('│ logout       - Logout and exit                 │');
   } else {
-    terminal.writeln('│ [1] Message Boards     │ [3] Chat Room           │');
-    terminal.writeln('│ [2] User Directory     │ [4] Logout              │');
-    terminal.writeln('│                        │ [ ] (Register for more) │');
+    terminal.writeln('│ messageboard - View message boards             │');
+    terminal.writeln('│ users        - View user directory             │');
+    terminal.writeln('│ chat         - Enter chat room                 │');
+    terminal.writeln('│ logout       - Logout and exit                 │');
+    terminal.writeln('│ (Register for more features)                   │');
   }
   terminal.writeln('└─◆══════════════════════════════════════════════◆─┘');
   terminal.writeln('');
-  terminal.write('Select option (1-5): ');
+  terminal.write('Enter command: ');
   
   currentMenu = 'main';
 }
@@ -401,35 +405,43 @@ async function handleRegistration(command) {
 
 // Main Menu Handler
 function handleMainMenu(command) {
-  switch (command) {
-    case '1':
+  switch (command.toLowerCase()) {
+    case 'messageboard':
+    case 'messageboards':
+    case 'messages':
       showMessageBoards();
       break;
-    case '2':
+    case 'users':
+    case 'user':
+    case 'directory':
       showUserDirectory();
       break;
-    case '3':
+    case 'chat':
+    case 'chatroom':
       showChatRoom();
       break;
-    case '4':
+    case 'password':
+    case 'changepassword':
+    case 'passwd':
       if (currentUser && currentUser.user_level !== 'guest') {
         showChangePassword();
       } else {
-        logout();
+        terminal.writeln('\x1b[31mGuest users cannot change passwords.\x1b[0m');
+        terminal.write('\x1b[32mEnter command: \x1b[0m');
       }
       break;
-    case '5':
-      if (currentUser && currentUser.user_level !== 'guest') {
-        logout();
-      } else {
-        terminal.writeln('\x1b[31mInvalid option! Please select 1-5.\x1b[0m');
-        terminal.write('\x1b[32mSelect option (1-5): \x1b[0m');
-      }
+    case 'logout':
+    case 'exit':
+    case 'quit':
+      logout();
+      break;
+    case 'help':
+      showBBSMainMenu();
       break;
     default:
-      const maxOption = (currentUser && currentUser.user_level !== 'guest') ? '5' : '4';
-      terminal.writeln(`\x1b[31mInvalid option! Please select 1-${maxOption}.\x1b[0m`);
-      terminal.write(`\x1b[32mSelect option (1-${maxOption}): \x1b[0m`);
+      terminal.writeln(`\x1b[31mUnknown command: "${command}"\x1b[0m`);
+      terminal.writeln('\x1b[33mType "help" to see available commands.\x1b[0m');
+      terminal.write('\x1b[32mEnter command: \x1b[0m');
   }
 }
 
@@ -460,23 +472,27 @@ async function showMessageBoards() {
         const msgCount = count || 0;
         const paddedBoard = `/${board}/`.padEnd(12);
         const paddedCount = `(${msgCount} msgs)`.padEnd(10);
-        terminal.writeln(`║ [${i + 1}] ${paddedBoard} ${paddedCount} ║`);
+        terminal.writeln(`║ ${paddedBoard} ${paddedCount} ║`);
       }
     } catch (err) {
       terminal.writeln('Error loading message counts.');
       boards.forEach((board, index) => {
         const paddedBoard = `/${board}/`.padEnd(12);
-        terminal.writeln(`║ [${index + 1}] ${paddedBoard} (0 msgs)     ║`);
+        terminal.writeln(`║ ${paddedBoard} (0 msgs)     ║`);
       });
     }
   } else {
     terminal.writeln('Database connection required.');
   }
   
-  terminal.writeln('║ [0] Back to Main Menu                ║');
   terminal.writeln('╚═══════════════════════════════════════════════════════════╝');
   terminal.writeln('');
-  terminal.write('Select board (0-6): ');
+  terminal.writeln('Commands:');
+  terminal.writeln('  back, main, menu - Return to main menu');
+  terminal.writeln('  general, random, music, computer, prog, news - Select board');
+  terminal.writeln('  help - Show this list again');
+  terminal.writeln('');
+  terminal.write('Enter board name: ');
   
   currentMenu = 'messages';
 }
@@ -910,6 +926,9 @@ function createChatContainer() {
     font-family: 'Courier New', monospace;
     font-size: 11px;
     line-height: 1.4;
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
   `;
   chatMainArea.appendChild(chatMessages);
   
@@ -1306,6 +1325,9 @@ function addChatMessage(type, message, username = null, customTime = null) {
   messageDiv.style.cssText = `
     margin-bottom: 2px;
     word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
   `;
   
   const time = customTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -1332,7 +1354,25 @@ function exitChatRoom() {
   }
   
   if (chatContainer) {
-    chatContainer.style.display = 'none';
+    // Remove the chat container completely to restore terminal layout
+    chatContainer.remove();
+  }
+  
+  // Force terminal to resize properly and restore window
+  if (window.fitAddon) {
+    setTimeout(() => {
+      window.fitAddon.fit();
+      // Also trigger a resize event to ensure proper layout
+      window.dispatchEvent(new Event('resize'));
+    }, 100);
+  }
+  
+  // Ensure terminal window is properly displayed
+  const terminalWindow = document.getElementById('terminalWindow');
+  if (terminalWindow) {
+    terminalWindow.style.display = 'block';
+    terminalWindow.style.width = 'auto';
+    terminalWindow.style.height = 'auto';
   }
   
   currentMenu = 'main';
@@ -1433,16 +1473,31 @@ function logout() {
 
 // Menu Handlers
 function handleMessageMenu(command) {
-  if (command === '0') {
-    showBBSMainMenu();
-  } else if (command >= '1' && command <= '6') {
-    const boards = ['general', 'random', 'music', 'computer', 'prog', 'news'];
-    const boardIndex = parseInt(command) - 1;
-    const selectedBoard = boards[boardIndex];
-    showBoardMessages(selectedBoard);
-  } else {
-    terminal.writeln('\x1b[31mInvalid option! Please select 0-6.\x1b[0m');
-    terminal.write('\x1b[1m\x1b[4m\x1b[32mSelect board (0-6):\x1b[0m ');
+  const boards = ['general', 'random', 'music', 'computer', 'prog', 'news'];
+  
+  switch (command.toLowerCase()) {
+    case 'back':
+    case 'main':
+    case 'menu':
+    case '0':
+      showBBSMainMenu();
+      break;
+    case 'general':
+    case 'random':
+    case 'music':
+    case 'computer':
+    case 'prog':
+    case 'news':
+      showBoardMessages(command.toLowerCase());
+      break;
+    case 'help':
+      showMessageBoards();
+      break;
+    default:
+      terminal.writeln(`\x1b[31mUnknown board: "${command}"\x1b[0m`);
+      terminal.writeln('\x1b[33mAvailable boards: general, random, music, computer, prog, news\x1b[0m');
+      terminal.writeln('\x1b[33mType "help" to see the board list again.\x1b[0m');
+      terminal.write('\x1b[32mEnter board name: \x1b[0m');
   }
 }
 

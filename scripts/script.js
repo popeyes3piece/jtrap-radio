@@ -1,3 +1,39 @@
+// Word wrap utility function
+function wrapText(text, maxWidth = 80) {
+  if (!text || text.length <= maxWidth) return text;
+  
+  const words = text.split(' ');
+  const lines = [];
+  let currentLine = '';
+  
+  for (const word of words) {
+    if ((currentLine + word).length <= maxWidth) {
+      currentLine += (currentLine ? ' ' : '') + word;
+    } else {
+      if (currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        // Word is longer than maxWidth, force it
+        lines.push(word);
+      }
+    }
+  }
+  
+  if (currentLine) {
+    lines.push(currentLine);
+  }
+  
+  return lines.join('\n');
+}
+
+// Make wrapText available globally
+window.wrapText = wrapText;
+
+// Terminal word wrapping is now handled by CSS
+
+
+
 document.addEventListener('DOMContentLoaded', async () => {
   // Only run this once DOM is ready
   // Audio player initialization moved to audio-player.js module
@@ -51,8 +87,8 @@ function shuffleArray(array) {
 function reshuffleVideos() {
   if (mediaFiles && mediaFiles.length > 0) {
     shuffleArray(mediaFiles);
-    // Restart from the first video in the new shuffled order
-    playVideo(0);
+    // Reset to first video but don't auto-play
+    currentVideoIndex = 0;
     console.log('Videos reshuffled!');
   }
 }
@@ -446,9 +482,9 @@ async function initializeMediaPlayer() {
     });
   }
   
-  // Start playing the first video automatically
+  // Load the first video but don't auto-play
   if (mediaFiles.length > 0) {
-    playVideo(0);
+    loadVideo(0);
   }
 }
 
@@ -557,7 +593,7 @@ function loadFallbackMediaFiles() {
   ];
 }
 
-function playVideo(index) {
+function loadVideo(index) {
   if (index < 0 || index >= mediaFiles.length) return;
   
   currentVideoIndex = index;
@@ -601,10 +637,20 @@ function playVideo(index) {
     videoName.textContent = `${index + 1}/${mediaFiles.length} - ${video.name}`;
   }
   
-  // Auto-play
-  videoElement.play().catch(e => {
-    console.log('Autoplay prevented:', e);
-  });
+  // Don't auto-play to avoid interrupting audio stream
+  // videoElement.play().catch(e => {
+  //   console.log('Autoplay prevented:', e);
+  // });
+}
+
+function playVideo(index) {
+  loadVideo(index);
+  // Play the video after loading
+  if (currentMediaElement) {
+    currentMediaElement.play().catch(e => {
+      console.log('Play prevented:', e);
+    });
+  }
 }
 
 function nextVideo() {
@@ -1218,19 +1264,61 @@ function initializeTerminal() {
       terminal.open(terminalElement);
       fitAddon.fit();
       
+      // Add resize listener for dynamic resizing
+      window.addEventListener('resize', () => {
+        fitAddon.fit();
+      });
+      
+      // Override terminal methods to handle word wrapping
+      const originalWriteln = terminal.writeln.bind(terminal);
+      const originalWrite = terminal.write.bind(terminal);
+      
+      terminal.writeln = function(text) {
+        if (typeof text !== 'string') {
+          originalWriteln(text);
+          return;
+        }
+        
+        const maxWidth = terminal.cols || 80;
+        if (text.length <= maxWidth) {
+          originalWriteln(text);
+          return;
+        }
+        
+        // Wrap the text
+        const wrappedText = wrapText(text, maxWidth);
+        const lines = wrappedText.split('\n');
+        lines.forEach(line => originalWriteln(line));
+      };
+      
+      terminal.write = function(text) {
+        if (typeof text !== 'string') {
+          originalWrite(text);
+          return;
+        }
+        
+        // For write, we need to be more careful about line breaks
+        const maxWidth = terminal.cols || 80;
+        if (text.length <= maxWidth) {
+          originalWrite(text);
+          return;
+        }
+        
+        // Wrap the text
+        const wrappedText = wrapText(text, maxWidth);
+        const lines = wrappedText.split('\n');
+        lines.forEach((line, index) => {
+          if (index === 0) {
+            originalWrite(line);
+          } else {
+            originalWriteln(line);
+          }
+        });
+      };
+      
       // Add welcome message
       terminal.writeln('\x1b[32mWelcome to JTrap Family Radio Terminal!\x1b[0m');
       terminal.writeln('\x1b[33mType "help" for available commands.\x1b[0m');
-      terminal.writeln('');
-      
-      // Add some retro commands
-      terminal.writeln('\x1b[36mAvailable commands:\x1b[0m');
-      terminal.writeln('  help     - Show this help message');
-      terminal.writeln('  radio    - Show radio station info');
-      terminal.writeln('  time     - Show current time');
-      terminal.writeln('  clear    - Clear the terminal');
-      terminal.writeln('  matrix   - Matrix effect (coming soon)');
-      terminal.writeln('  bbs      - Access BBS system');
       terminal.writeln('');
       
       // Reset password mode when terminal starts
@@ -1260,7 +1348,7 @@ function initializeTerminal() {
           }
           currentLine = '';
           if (!window.BBS || !window.BBS.bbsMode()) {
-            terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
+            terminal.write('\x1b[32m> \x1b[0m');
           }
         } else if (data === '\x7f') { // Backspace
           if (currentLine.length > 0) {
@@ -1273,15 +1361,8 @@ function initializeTerminal() {
         }
       });
       
-      // Show prompt
-      terminal.write('\x1b[32mjtrap@radio:~$ \x1b[0m');
-      
-      // Handle window resize
-      window.addEventListener('resize', () => {
-        if (terminal && fitAddon) {
-          fitAddon.fit();
-        }
-      });
+      // Show initial prompt
+      terminal.write('\x1b[32m> \x1b[0m');
     }
   } catch (error) {
     console.error('Failed to initialize terminal:', error);
